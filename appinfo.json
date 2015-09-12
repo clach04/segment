@@ -1,0 +1,21 @@
+{
+  "uuid": "2de449d5-2490-438d-af47-193af40e08f9",
+  "shortName": "Segment",
+  "longName": "Segment",
+  "companyName": "Keegan",
+  "versionLabel": "1.0",
+  "sdkVersion": "3",
+  "targetPlatforms": ["chalk"],
+  "watchapp": {
+    "watchface": true
+  },
+  "appKeys": {
+    "color_background": 0,
+    "color_hour": 1,
+    "color_min1": 2,
+    "color_min0": 3
+  },
+  "resources": {
+    "media": []
+  }
+}
