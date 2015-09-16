@@ -1,21 +1,26 @@
 #include <pebble.h>
 
 const int SEGMENT_SIZE = 15;
-const int OUTER_SEGMENT_RATIO = 69; // as a percent
-const int INNER_SEGMENT_RATIO = 45; // as a percent
+const int OUTER_SEGMENT_RATIO = 6890; // divided by 1000 later
+const int INNER_SEGMENT_RATIO = 4445; // divided by 1000 later
+const int INNER_BLOCK_RATIO = 2223;
 
 typedef void (*AnimationAllPhasesCompleteCallback)(void);
 
 struct Colors {
   GColor background;
   GColor hour;
-  GColor min1;
+  GColor min10;
   GColor min0;
 };
 
 static Window *s_window;
 static struct tm *s_time;
+
 static int s_hour_inner_radius;
+static int s_minute_inner_radius;
+static int s_minute_block_size;
+static GPoint s_center;
 
 static Animation *s_animation;
 static AnimationImplementation s_animation_implementation;
@@ -77,13 +82,29 @@ static void draw_background(Layer *layer, GContext *ctx) {
   graphics_fill_rect(ctx, layer_get_bounds(layer), 0, GCornerNone);
 }
 
+static void draw_outer_expand(GContext *ctx) {
+  graphics_context_set_fill_color(ctx, s_colors.hour);
+  graphics_fill_circle(ctx, s_center, animation_distance(0, s_base_size));
+}
+
+static void draw_outer_reveal(GContext *ctx) {
+  graphics_context_set_fill_color(ctx, s_colors.hour);
+  graphics_fill_radial(
+    ctx, s_center,
+    animation_distance(0, s_hour_inner_radius),
+    s_base_size + 1,
+    get_segment_angle(0),
+    get_segment_angle(24)
+  );
+}
+
 static void draw_hour_outer_segment(GContext *ctx, int start, int end, int anim_start, bool swap_direction) {
   graphics_context_set_fill_color(ctx, s_colors.hour);
 
   if (swap_direction) {
     graphics_fill_radial(
       ctx,
-      GPoint(s_base_size, s_base_size),
+      s_center,
       s_hour_inner_radius,
       s_base_size + 1,
       animation_distance(get_segment_angle(anim_start), get_segment_angle(start)),
@@ -92,7 +113,7 @@ static void draw_hour_outer_segment(GContext *ctx, int start, int end, int anim_
   } else {
     graphics_fill_radial(
       ctx,
-      GPoint(s_base_size, s_base_size),
+      s_center,
       s_hour_inner_radius,
       s_base_size + 1,
       get_segment_angle(start),
@@ -105,7 +126,7 @@ static void draw_hour_inner_segment(GContext *ctx, int start, int end) {
   graphics_context_set_fill_color(ctx, s_colors.hour);
   graphics_fill_radial(
     ctx,
-    GPoint(s_base_size, s_base_size),
+    s_center,
     0,
     s_base_size + 1,
     get_segment_angle(start),
@@ -113,26 +134,49 @@ static void draw_hour_inner_segment(GContext *ctx, int start, int end) {
   );
 }
 
-
-static void draw_outer_expand(GContext *ctx) {
-  graphics_context_set_fill_color(ctx, s_colors.hour);
-  graphics_fill_circle(ctx, GPoint(s_base_size, s_base_size), animation_distance(0, s_base_size));
-}
-
-static void draw_outer_reveal(GContext *ctx) {
-  graphics_context_set_fill_color(ctx, s_colors.hour);
-//  APP_LOG(APP_LOG_LEVEL_INFO, "animation_distance_linear(0, s_hour_inner_radius): %d", animation_distance_linear(0, s_hour_inner_radius));
+static void _draw_min_outer_segment(GContext *ctx, GColor color, int start, int end) {
+  graphics_context_set_fill_color(ctx, color);
   graphics_fill_radial(
-    ctx, GPoint(s_base_size, s_base_size),
-    animation_distance(0, s_hour_inner_radius),
-    s_base_size + 1,
-    get_segment_angle(0),
-    get_segment_angle(24)
+    ctx,
+    s_center,
+    s_minute_inner_radius,
+    s_hour_inner_radius,
+    get_segment_angle(start),
+    get_segment_angle(end)
   );
 }
 
+static void draw_min0_outer_segment(GContext *ctx, int start, int end) {
+  _draw_min_outer_segment(ctx, s_colors.min0, start, end);
+}
+
+static void draw_min10_outer_segment(GContext *ctx, int start, int end) {
+  _draw_min_outer_segment(ctx, s_colors.min10, start, end);
+}
+
+static void _draw_min_inner_block(GContext *ctx, GColor color, GRect rect) {
+  graphics_context_set_fill_color(ctx, color);
+  graphics_fill_rect(ctx, rect, 0, GCornerNone);
+}
+
+static void draw_min0_inner_block_from_center(GContext *ctx, int width, int height) {
+  _draw_min_inner_block(ctx, s_colors.min0, GRect(s_center.x, s_center.y, width, height));
+}
+
+static void draw_min10_inner_block_from_center(GContext *ctx, int width, int height) {
+  _draw_min_inner_block(ctx, s_colors.min10, GRect(s_center.x, s_center.y, width, height));
+}
+
+static void draw_min0_inner_block_custom(GContext *ctx,  GRect rect) {
+  _draw_min_inner_block(ctx, s_colors.min0, rect);
+}
+
+static void draw_min10_inner_block_custom(GContext *ctx,  GRect rect) {
+  _draw_min_inner_block(ctx, s_colors.min10, rect);
+}
 
 static void draw_outer(GContext *ctx) {
+
   switch (s_time->tm_hour) {
     case 1 :
       draw_hour_outer_segment(ctx, 1, 11, 25, false);
@@ -196,6 +240,146 @@ static void draw_outer(GContext *ctx) {
 }
 
 static void draw_inner(GContext *ctx) {
+  switch (s_time->tm_min % 10) {
+    case 0 :
+      draw_min0_inner_block_from_center(ctx, s_minute_block_size, s_minute_inner_radius);
+      draw_min0_inner_block_from_center(ctx, s_minute_block_size, -s_minute_inner_radius);
+      draw_min0_outer_segment(ctx, 0, 12);
+      break;
+
+    case 1 :
+      draw_min0_outer_segment(ctx, 1, 11);
+      break;
+
+    case 2 :
+      draw_min0_outer_segment(ctx, 0, 6);
+      draw_min0_outer_segment(ctx, 8, 12);
+      draw_min0_inner_block_from_center(ctx, s_minute_inner_radius, -s_minute_block_size);
+      draw_min0_inner_block_from_center(ctx, s_minute_block_size, s_minute_inner_radius);
+      break;
+
+    case 3 :
+      draw_min0_outer_segment(ctx, 1, 11);
+      draw_min0_inner_block_custom(ctx, GRect(
+        s_center.x + s_minute_inner_radius,
+        s_center.y - s_minute_block_size / 2,
+        -s_minute_block_size,
+        s_minute_block_size
+      ));
+      break;
+
+    case 4 :
+      draw_min0_outer_segment(ctx, 3, 10);
+      draw_min0_inner_block_from_center(ctx, s_minute_block_size, -s_minute_inner_radius);
+      draw_min0_inner_block_custom(ctx, GRect(
+        s_center.x,
+        s_center.y - s_minute_block_size / 5,
+        s_minute_inner_radius,
+        s_minute_block_size
+      ));
+      break;
+
+    case 5 :
+      draw_min0_outer_segment(ctx, 0, 4);
+      draw_min0_outer_segment(ctx, 6, 12);
+      draw_min0_inner_block_from_center(ctx, s_minute_inner_radius, s_minute_block_size);
+      draw_min0_inner_block_from_center(ctx, s_minute_block_size, -s_minute_inner_radius);
+      break;
+
+    case 6 :
+      draw_min0_outer_segment(ctx, 6, 12);
+      draw_min0_inner_block_from_center(ctx, s_minute_inner_radius, s_minute_block_size);
+      draw_min0_inner_block_from_center(ctx, s_minute_block_size, -s_minute_inner_radius);
+      draw_min0_inner_block_from_center(ctx, s_minute_block_size, s_minute_inner_radius);
+      break;
+
+    case 7 :
+      draw_min0_inner_block_custom(ctx, GRect(
+        s_center.x + s_minute_inner_radius,
+        s_center.y,
+        -s_minute_block_size,
+        -s_minute_block_size
+      ));
+      draw_min0_outer_segment(ctx, 0, 10);
+      break;
+
+    case 8 :
+      draw_min0_inner_block_from_center(ctx, s_minute_block_size, s_minute_inner_radius);
+      draw_min0_inner_block_from_center(ctx, s_minute_block_size, -s_minute_inner_radius);
+      draw_min0_inner_block_custom(ctx, GRect(
+        s_center.x,
+        s_center.y - s_minute_block_size / 2,
+        s_minute_inner_radius,
+        s_minute_block_size
+      ));
+      draw_min0_outer_segment(ctx, 0, 12);
+      break;
+
+    case 9 :
+      draw_min0_inner_block_from_center(ctx, s_minute_block_size, -s_minute_inner_radius);
+      draw_min0_inner_block_custom(ctx, GRect(
+        s_center.x,
+        s_center.y - s_minute_block_size / 2,
+        s_minute_inner_radius,
+        s_minute_block_size
+      ));
+      draw_min0_outer_segment(ctx, 0, 12);
+      break;
+
+  }
+
+  switch (s_time->tm_min / 10) {
+    case 0 :
+      draw_min10_inner_block_from_center(ctx, -s_minute_block_size, s_minute_inner_radius);
+      draw_min10_inner_block_from_center(ctx, -s_minute_block_size, -s_minute_inner_radius);
+      draw_min10_outer_segment(ctx, -12, 0);
+      break;
+
+    case 1 :
+      draw_min10_outer_segment(ctx, -11, -1);
+      break;
+
+    case 2 :
+      draw_min10_inner_block_from_center(ctx, -s_minute_inner_radius, s_minute_block_size);
+      draw_min10_inner_block_from_center(ctx, -s_minute_block_size, -s_minute_inner_radius);
+      draw_min10_outer_segment(ctx, -4, 0);
+      draw_min10_outer_segment(ctx, -12, -6);
+      break;
+
+    case 3 :
+      draw_min10_inner_block_custom(ctx, GRect(
+        s_center.x - s_minute_block_size,
+        s_center.y - s_minute_block_size / 2,
+        -s_minute_block_size,
+        s_minute_block_size
+      ));
+      draw_min10_inner_block_from_center(ctx, -s_minute_block_size, s_minute_inner_radius);
+      draw_min10_inner_block_from_center(ctx, -s_minute_block_size, -s_minute_inner_radius);
+      draw_min10_outer_segment(ctx, -4, 0);
+      draw_min10_outer_segment(ctx, 12, 16);
+      break;
+
+    case 4 :
+      draw_min10_inner_block_custom(ctx, GRect(
+        s_center.x,
+        s_center.y - s_minute_block_size / 5,
+        -s_hour_inner_radius + s_minute_block_size / 5,
+        s_minute_block_size
+      ));
+      draw_min10_inner_block_from_center(ctx, -s_minute_block_size, s_minute_inner_radius);
+      draw_min10_inner_block_from_center(ctx, -s_minute_block_size, -s_minute_inner_radius);
+      draw_min10_outer_segment(ctx, -7, -3);
+      break;
+
+    case 5 :
+      draw_min10_inner_block_from_center(ctx, -s_minute_inner_radius, -s_minute_block_size);
+      draw_min10_inner_block_from_center(ctx, -s_minute_block_size, s_minute_inner_radius);
+      draw_min10_outer_segment(ctx, -6, 0);
+      draw_min10_outer_segment(ctx, -12, -8);
+      break;
+
+  }
+
   switch (s_time->tm_hour) {
     case 1 :
       break;
@@ -265,8 +449,8 @@ static void update_layer(Layer *layer, GContext *ctx) {
       break;
 
     case 1 :
-      draw_outer_reveal(ctx);
       draw_inner(ctx);
+      draw_outer_reveal(ctx);
       break;
 
     case 2 :
@@ -333,9 +517,14 @@ static void animate_to_phase(int phase, AnimationAllPhasesCompleteCallback callb
 static void main_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect window_bounds = layer_get_bounds(window_layer);
-  s_base_size = (window_bounds.size.w < window_bounds.size.h ? window_bounds.size.w : window_bounds.size.h) / 2;
 
-  s_hour_inner_radius = s_base_size * OUTER_SEGMENT_RATIO / 100;
+  s_base_size = (window_bounds.size.w < window_bounds.size.h ? window_bounds.size.w : window_bounds.size.h) / 2;
+  s_hour_inner_radius = s_base_size * OUTER_SEGMENT_RATIO / 10000;
+  s_minute_inner_radius = s_base_size * INNER_SEGMENT_RATIO / 10000;
+  s_minute_block_size = s_base_size * INNER_BLOCK_RATIO / 10000;
+  s_center = GPoint(s_base_size, s_base_size);
+
+  APP_LOG(APP_LOG_LEVEL_INFO, "s_minute_block_size: %d", s_minute_block_size);
 
   layer_set_update_proc(window_get_root_layer(window), update_layer);
 }
@@ -345,26 +534,24 @@ static void main_window_unload(Window *window) {
 }
 
 static void on_time_change_hide_done(void) {
-  ++s_demo_time;
+  s_demo_time = s_demo_time + 11;
   // Get a tm structure
   time_t temp = time(NULL);
   s_time = localtime(&temp);
   s_time->tm_hour = s_demo_time % 12;
+  s_time->tm_min = s_demo_time % 60;
   // s_time->tm_hour = s_time->tm_hour % 12;
   animate_to_phase(2, NULL);
 }
 
 static void update_time() {
-
-  // @TODO fake time here
-//  APP_LOG(APP_LOG_LEVEL_INFO, "UPDATE_TIME - s_animation_phase: %d", s_animation_phase);
-
   if(s_animation_phase == 2) {
      animate_to_phase(1, on_time_change_hide_done);
   } else {
     time_t temp = time(NULL);
     s_time = localtime(&temp);
     s_time->tm_hour = s_demo_time % 12;
+    s_time->tm_min = s_demo_time % 60;
     animate_to_phase(2, NULL);
   }
 
@@ -397,6 +584,8 @@ static void init() {
 
   s_colors.background = GColorFromHEX(0xAAFFFF);
   s_colors.hour = GColorFromHEX(0x0055AA);
+  s_colors.min10 = GColorFromHEX(0x00AAFF);
+  s_colors.min0 = GColorFromHEX(0x55AAFF);
 }
 
 static void deinit() {
