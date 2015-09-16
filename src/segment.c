@@ -1,10 +1,10 @@
 #include <pebble.h>
 
-#define HOUR_OUTER_SEGMENT_RATIO 0.69;
+const int SEGMENT_SIZE = 15;
+const int OUTER_SEGMENT_RATIO = 69; // as a percent
+const int INNER_SEGMENT_RATIO = 45; // as a percent
 
 typedef void (*AnimationAllPhasesCompleteCallback)(void);
-
-const int SEGMENT_SIZE = 15;
 
 struct Colors {
   GColor background;
@@ -24,17 +24,39 @@ static bool s_animation_running = false;
 static int s_animation_phase = 0;
 static int s_animation_target_phase = 0;
 static AnimationAllPhasesCompleteCallback s_animation_callback;
-static int s_animation_phase_timing[3] = {
+static int s_animation_phase_timing[2] = {
   400,
+  400
+};
+
+
+
+
+
+
+
+
+
+static int s_hour_animation_scale[12] = {
+  450,
+  700,
+  450,
+  425,
   400,
-  500
+  450,
+  300,
+  750,
+  300,
+  300,
+  150,
+  150
 };
 
 static struct Colors s_colors;
 
 // max width or height we can make our shapes fit in
 static int s_base_size;
-static int s_demo_time = 1;
+static int s_demo_time = 0;
 
 // DECLARATIONS
 static void next_animation(bool reverse);
@@ -63,7 +85,7 @@ static void draw_hour_outer_segment(GContext *ctx, int start, int end, int anim_
       ctx,
       GPoint(s_base_size, s_base_size),
       s_hour_inner_radius,
-      s_base_size,
+      s_base_size + 1,
       animation_distance(get_segment_angle(anim_start), get_segment_angle(start)),
       get_segment_angle(end)
     );
@@ -72,7 +94,7 @@ static void draw_hour_outer_segment(GContext *ctx, int start, int end, int anim_
       ctx,
       GPoint(s_base_size, s_base_size),
       s_hour_inner_radius,
-      s_base_size,
+      s_base_size + 1,
       get_segment_angle(start),
       animation_distance(get_segment_angle(anim_start), get_segment_angle(end))
     );
@@ -81,8 +103,14 @@ static void draw_hour_outer_segment(GContext *ctx, int start, int end, int anim_
 
 static void draw_hour_inner_segment(GContext *ctx, int start, int end) {
   graphics_context_set_fill_color(ctx, s_colors.hour);
-  graphics_fill_radial(ctx, GPoint(s_base_size, s_base_size), 0, s_base_size, get_segment_angle(start),
-                       get_segment_angle(end));
+  graphics_fill_radial(
+    ctx,
+    GPoint(s_base_size, s_base_size),
+    0,
+    s_base_size + 1,
+    get_segment_angle(start),
+    get_segment_angle(end)
+  );
 }
 
 
@@ -97,7 +125,7 @@ static void draw_outer_reveal(GContext *ctx) {
   graphics_fill_radial(
     ctx, GPoint(s_base_size, s_base_size),
     animation_distance(0, s_hour_inner_radius),
-    s_base_size,
+    s_base_size + 1,
     get_segment_angle(0),
     get_segment_angle(24)
   );
@@ -107,25 +135,62 @@ static void draw_outer_reveal(GContext *ctx) {
 static void draw_outer(GContext *ctx) {
   switch (s_time->tm_hour) {
     case 1 :
-    case 13 :
       draw_hour_outer_segment(ctx, 1, 11, 25, false);
       break;
 
     case 2 :
-    case 14 :
-      draw_hour_outer_segment(ctx, -3, 4, -9, true); // top
-      draw_hour_outer_segment(ctx, 9, 16, 3, true); // bottom
+      draw_hour_outer_segment(ctx, -3, 4, -9, true);
+      draw_hour_outer_segment(ctx, 9, 16, 3, true);
       break;
 
     case 3 :
-    case 15 :
       draw_hour_outer_segment(ctx, -3, 15, 21, false);
       break;
 
     case 4 :
-    case 16 :
-//      draw_hour_outer_segment(ctx, -3, 15);
-//      draw_hour_inner_segment(ctx, 5, 7);
+      draw_hour_outer_segment(ctx, 5, 7, 1, true);
+      draw_hour_outer_segment(ctx, 11, 13, 7, true);
+      draw_hour_outer_segment(ctx, 17, 25, 13, true);
+      break;
+
+    case 5 :
+      draw_hour_outer_segment(ctx, -4, 3, 10, false);
+      draw_hour_outer_segment(ctx, 9, 15, 20, false);
+      break;
+
+    case 6 :
+      draw_hour_outer_segment(ctx, 7, 27, 31, false);
+      break;
+
+    case 7 :
+      draw_hour_outer_segment(ctx, -3, 3, -9, true);
+      draw_hour_outer_segment(ctx, 13, 15, 3, true);
+      break;
+
+    case 8 :
+      draw_hour_outer_segment(ctx, -4, 4, -8, true);
+      draw_hour_outer_segment(ctx, 8, 16, 4, true);
+      break;
+
+    case 9 :
+      draw_hour_outer_segment(ctx, -5, 15, 19, false);
+      break;
+
+    case 10 :
+      draw_hour_outer_segment(ctx, -6, -1, 1, false);
+      draw_hour_outer_segment(ctx, 13, 18, 11, true);
+      draw_hour_outer_segment(ctx, 1, 11, 11, false);
+      break;
+
+    case 11 :
+      draw_hour_outer_segment(ctx, 1, 11, 13, false);
+      draw_hour_outer_segment(ctx, 13, 23, 25, false);
+      break;
+
+    case 0 :
+      draw_hour_outer_segment(ctx, -2, 3, -3, true);
+      draw_hour_outer_segment(ctx, 16, 21, 15, true);
+      draw_hour_outer_segment(ctx, 9, 15, 3, true);
       break;
   }
 }
@@ -133,23 +198,59 @@ static void draw_outer(GContext *ctx) {
 static void draw_inner(GContext *ctx) {
   switch (s_time->tm_hour) {
     case 1 :
-    case 13 :
       break;
 
     case 2 :
-    case 14 :
       draw_hour_inner_segment(ctx, 2, 4);
       draw_hour_inner_segment(ctx, 14, 16);
       break;
 
     case 3 :
-    case 15 :
       draw_hour_inner_segment(ctx, 5, 7);
       break;
 
     case 4 :
-    case 16 :
+      draw_hour_inner_segment(ctx, -1, 1);
       draw_hour_inner_segment(ctx, 5, 7);
+      draw_hour_inner_segment(ctx, 11, 13);
+      draw_hour_inner_segment(ctx, 17, 19);
+      break;
+
+    case 5 :
+      draw_hour_inner_segment(ctx, -4, -2);
+      draw_hour_inner_segment(ctx, 8, 10);
+      break;
+
+    case 6 :
+      draw_hour_inner_segment(ctx, 7, 9);
+      draw_hour_inner_segment(ctx, 15, 17);
+      break;
+
+    case 7 :
+      draw_hour_inner_segment(ctx, 1, 3);
+      draw_hour_inner_segment(ctx, 13, 15);
+      break;
+
+    case 8 :
+      draw_hour_inner_segment(ctx, -4, -2);
+      draw_hour_inner_segment(ctx, 2, 4);
+      draw_hour_inner_segment(ctx, 14, 16);
+      draw_hour_inner_segment(ctx, 8, 10);
+      break;
+
+    case 9 :
+      draw_hour_inner_segment(ctx, -5, -3);
+      draw_hour_inner_segment(ctx, 3, 5);
+      break;
+
+    case 10 :
+      draw_hour_inner_segment(ctx, 1, 3);
+      draw_hour_inner_segment(ctx, 9, 11);
+      break;
+
+    case 0 :
+      draw_hour_inner_segment(ctx, 1, 3);
+      draw_hour_inner_segment(ctx, 13, 15);
       break;
   }
 }
@@ -181,10 +282,6 @@ static void update_animation(Animation *animation, AnimationProgress progress) {
 }
 
 static void on_animation_stopped(Animation *animation, bool stopped, void *ctx) {
-
-  APP_LOG(APP_LOG_LEVEL_INFO, "s_animation_target_phase: %d", s_animation_target_phase);
-  APP_LOG(APP_LOG_LEVEL_INFO, "s_animation_phase: %d", s_animation_phase);
-
   if(s_animation_phase < s_animation_target_phase) {
     s_animation_progress = ANIMATION_NORMALIZED_MIN;
     ++s_animation_phase;
@@ -194,7 +291,6 @@ static void on_animation_stopped(Animation *animation, bool stopped, void *ctx) 
     --s_animation_phase;
     next_animation(true);
   } else {
-    APP_LOG(APP_LOG_LEVEL_INFO, "s_animation_progress: %d", s_animation_progress);
     s_animation_running = false;
     if(s_animation_callback) {
       s_animation_callback();
@@ -202,16 +298,20 @@ static void on_animation_stopped(Animation *animation, bool stopped, void *ctx) 
   }
 }
 
-static void next_animation(bool reverse) {
-  if(s_animation) {
-    animation_destroy(s_animation);
+static int get_animation_timing() {
+  if(s_animation_phase == 2) {
+    return s_hour_animation_scale[s_time->tm_hour];
+  } else {
+    return s_animation_phase_timing[s_animation_phase];
   }
+}
+
+static void next_animation(bool reverse) {
   s_animation = animation_create();
   s_animation_implementation.update = update_animation;
-
-  animation_set_duration(s_animation, s_animation_phase_timing[s_animation_phase]);
+  animation_set_duration(s_animation, get_animation_timing());
   animation_set_reverse(s_animation, reverse);
-  animation_set_curve(s_animation, AnimationCurveLinear);
+  animation_set_curve(s_animation, AnimationCurveEaseInOut);
   animation_set_implementation(s_animation, &s_animation_implementation);
   animation_set_handlers(s_animation, (AnimationHandlers) {
     .stopped = on_animation_stopped
@@ -235,7 +335,7 @@ static void main_window_load(Window *window) {
   GRect window_bounds = layer_get_bounds(window_layer);
   s_base_size = (window_bounds.size.w < window_bounds.size.h ? window_bounds.size.w : window_bounds.size.h) / 2;
 
-  s_hour_inner_radius = s_base_size * HOUR_OUTER_SEGMENT_RATIO;
+  s_hour_inner_radius = s_base_size * OUTER_SEGMENT_RATIO / 100;
 
   layer_set_update_proc(window_get_root_layer(window), update_layer);
 }
@@ -249,21 +349,22 @@ static void on_time_change_hide_done(void) {
   // Get a tm structure
   time_t temp = time(NULL);
   s_time = localtime(&temp);
-  s_time->tm_hour = s_demo_time;
+  s_time->tm_hour = s_demo_time % 12;
+  // s_time->tm_hour = s_time->tm_hour % 12;
   animate_to_phase(2, NULL);
 }
 
 static void update_time() {
 
   // @TODO fake time here
-  APP_LOG(APP_LOG_LEVEL_INFO, "UPDATE_TIME - s_animation_phase: %d", s_animation_phase);
+//  APP_LOG(APP_LOG_LEVEL_INFO, "UPDATE_TIME - s_animation_phase: %d", s_animation_phase);
 
   if(s_animation_phase == 2) {
      animate_to_phase(1, on_time_change_hide_done);
   } else {
     time_t temp = time(NULL);
     s_time = localtime(&temp);
-    s_time->tm_hour = s_demo_time;
+    s_time->tm_hour = s_demo_time % 12;
     animate_to_phase(2, NULL);
   }
 
@@ -300,7 +401,12 @@ static void init() {
 
 static void deinit() {
   // Destroy Window
-  animation_destroy(s_animation);
+  APP_LOG(APP_LOG_LEVEL_INFO, "DESTROY deinit %d", (int)s_animation);
+  if(s_animation) {
+    animation_destroy(s_animation);
+    s_animation = NULL;
+  }
+
   window_destroy(s_window);
 }
 
@@ -309,85 +415,3 @@ int main(void) {
   app_event_loop();
   deinit();
 }
-
-//  APP_LOG(APP_LOG_LEVEL_INFO, "draw_hour_animation_phase_0: %d", size);
-
-
-
-
-//static void animation_3_stopped(Animation *animation, bool stopped, void *ctx) {
-//  s_animation_progress = ANIMATION_NORMALIZED_MAX;
-//  APP_LOG(APP_LOG_LEVEL_INFO, "STOPPED");
-//}
-//
-//
-//static void animation_phase_3() {
-//  s_animation_phase = 3;
-//
-//  s_animation = animation_create();
-//  animation_set_duration(s_animation, s_animation_timing.phase_3_duration);
-//  s_animation_implementation.update = update_animation;
-//
-//  animation_set_implementation(s_animation, &s_animation_implementation);
-//  animation_set_handlers(
-//    s_animation, (AnimationHandlers) {
-//    .stopped = animation_3_stopped
-//  }, NULL);
-//
-//  animation_schedule(s_animation);
-//}
-//
-//
-//static void animation_2_stopped(Animation *animation, bool stopped, void *ctx) {
-//  s_animation_progress = ANIMATION_NORMALIZED_MIN;
-//  animation_phase_3();
-//}
-//
-//static void animation_2_stopped_reverse(Animation *animation, bool stopped, void *ctx) {
-//  s_animation_progress = ANIMATION_NORMALIZED_MIN;
-//  animation_phase_2(false);
-//}
-//
-//static void animation_phase_2(bool reverse) {
-//  s_animation_phase = 2;
-//  s_animation = animation_create();
-//  animation_set_duration(s_animation, s_animation_timing.phase_2_duration);
-//  animation_set_reverse(s_animation, reverse);
-//  s_animation_implementation.update = update_animation;
-//
-//  animation_set_implementation(s_animation, &s_animation_implementation);
-//  if(reverse) {
-//    animation_set_handlers(
-//      s_animation, (AnimationHandlers) {
-//      .stopped = animation_2_stopped_reverse
-//    }, NULL);
-//  }else {
-//    animation_set_handlers(
-//      s_animation, (AnimationHandlers) {
-//      .stopped = animation_2_stopped
-//    }, NULL);
-//  }
-//
-//  animation_schedule(s_animation);
-//}
-//
-//
-//static void animation_1_stopped(Animation *animation, bool stopped, void *ctx) {
-//  s_animation_progress = ANIMATION_NORMALIZED_MIN;
-//  animation_phase_2(false);
-//}
-//
-//static void animation_phase_1() {
-//  s_animation_phase = 1;
-//  s_animation = animation_create();
-//  animation_set_duration(s_animation, s_animation_timing.phase_1_duration);
-//  s_animation_implementation.update = update_animation;
-//  animation_set_curve(s_animation, AnimationCurveLinear);
-//  animation_set_implementation(s_animation, &s_animation_implementation);
-//  animation_set_handlers(
-//    s_animation, (AnimationHandlers) {
-//    .stopped = animation_1_stopped
-//  }, NULL);
-//
-//  animation_schedule(s_animation);
-//}
