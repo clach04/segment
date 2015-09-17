@@ -155,6 +155,17 @@ static void draw_min10_outer_segment(GContext *ctx, int start, int end) {
 }
 
 static void _draw_min_inner_block(GContext *ctx, GColor color, GRect rect) {
+
+  // @TODO remove this once we have teh better circle API
+  if (rect.size.w < 0) {
+     ++rect.origin.x;
+  }
+
+  if (rect.size.h < 0) {
+    ++rect.origin.y;
+  }
+
+
   graphics_context_set_fill_color(ctx, color);
   graphics_fill_rect(ctx, rect, 0, GCornerNone);
 }
