@@ -593,10 +593,10 @@ static void init() {
   // Make sure the time is displayed from the start
   update_time();
 
-  s_colors.background = GColorFromHEX(0xAAFFFF);
-  s_colors.hour = GColorFromHEX(0x0055AA);
-  s_colors.min10 = GColorFromHEX(0x00AAFF);
-  s_colors.min0 = GColorFromHEX(0x55AAFF);
+  s_colors.background = GColorFromHEX(0x000000);
+  s_colors.hour = GColorFromHEX(0xAA0000);
+  s_colors.min10 = GColorFromHEX(0xAAAAAA);
+  s_colors.min0 = GColorFromHEX(0xFFFFFF);
 }
 
 static void deinit() {
