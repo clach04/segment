@@ -165,7 +165,6 @@ static void _draw_min_inner_block(GContext *ctx, GColor color, GRect rect) {
     ++rect.origin.y;
   }
 
-
   graphics_context_set_fill_color(ctx, color);
   graphics_fill_rect(ctx, rect, 0, GCornerNone);
 }
@@ -544,34 +543,26 @@ static void main_window_unload(Window *window) {
 
 }
 
-static void on_time_change_hide_done(void) {
-  s_demo_time = s_demo_time + 11;
+static void set_time(void) {
   // Get a tm structure
   time_t temp = time(NULL);
   s_time = localtime(&temp);
-  s_time->tm_hour = s_demo_time % 12;
-  s_time->tm_min = s_demo_time % 60;
-  // s_time->tm_hour = s_time->tm_hour % 12;
+  s_time->tm_hour = s_time->tm_hour % 12;
   animate_to_phase(2, NULL);
 }
 
 static void update_time() {
   if(s_animation_phase == 2) {
-     animate_to_phase(1, on_time_change_hide_done);
+    animate_to_phase(1, set_time);
   } else {
-    time_t temp = time(NULL);
-    s_time = localtime(&temp);
-    s_time->tm_hour = s_demo_time % 12;
-    s_time->tm_min = s_demo_time % 60;
+    set_time();
     animate_to_phase(2, NULL);
   }
 
 }
 
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
-  if(tick_time->tm_sec % 5 == 0) {
-    update_time();
-  }
+  update_time();
 }
 
 static void init() {
@@ -588,7 +579,7 @@ static void init() {
   window_stack_push(s_window, true);
 
   // Register with TickTimerService
-  tick_timer_service_subscribe(SECOND_UNIT, tick_handler);
+  tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
 
   // Make sure the time is displayed from the start
   update_time();
