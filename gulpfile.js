@@ -18,7 +18,7 @@ gulp.task('build', ['clean'], function() {
     // @TODO this is super weird but it works...
     gulp.src('js/pebble-js-app.js')
       .pipe(template({configPage: file.contents.toString()}))
-      .pipe(gulp.dest('tmp/'));
+      .pipe(gulp.dest('src/js/'));
   };
 
   gulp.src('config/index.html')

@@ -16,11 +16,19 @@ struct Colors {
 
 static Window *s_window;
 static struct tm *s_time;
+static bool s_launched = false;
 
+// max width or height we can make our shapes fit in
+static int s_base_radius;
+static int s_base_diam;
 static int s_hour_inner_radius;
+static int s_hour_inset;
 static int s_minute_inner_radius;
+static int s_minute_inset;
 static int s_minute_block_size;
 static GPoint s_center;
+static GRect s_hour_rect;
+static GRect s_minute_rect;
 
 static Animation *s_animation;
 static AnimationImplementation s_animation_implementation;
@@ -31,7 +39,7 @@ static int s_animation_target_phase = 0;
 static AnimationAllPhasesCompleteCallback s_animation_callback;
 static int s_animation_phase_timing[2] = {
   400,
-  400
+  500
 };
 
 static int s_hour_animation_scale[12] = {
@@ -45,14 +53,12 @@ static int s_hour_animation_scale[12] = {
   750,
   300,
   300,
-  150,
-  150
+  275,
+  325
 };
 
 static struct Colors s_colors;
 
-// max width or height we can make our shapes fit in
-static int s_base_size;
 static int s_demo_time = 0;
 
 // DECLARATIONS
@@ -76,15 +82,24 @@ static void draw_background(Layer *layer, GContext *ctx) {
 
 static void draw_outer_expand(GContext *ctx) {
   graphics_context_set_fill_color(ctx, s_colors.hour);
-  graphics_fill_circle(ctx, s_center, animation_distance(0, s_base_size));
+  graphics_fill_radial(
+    ctx,
+    grect_inset(s_hour_rect, GEdgeInsets(animation_distance(s_base_radius - 7, 0))),
+    GOvalScaleModeFillCircle,
+//    animation_distance(0, s_base_radius),
+    s_base_radius,
+    get_segment_angle(0),
+    get_segment_angle(24)
+  );
 }
 
 static void draw_outer_reveal(GContext *ctx) {
   graphics_context_set_fill_color(ctx, s_colors.hour);
   graphics_fill_radial(
-    ctx, s_center,
-    animation_distance(0, s_hour_inner_radius),
-    s_base_size + 1,
+    ctx,
+    s_hour_rect,
+    GOvalScaleModeFillCircle,
+    animation_distance(s_base_radius, s_hour_inset),
     get_segment_angle(0),
     get_segment_angle(24)
   );
@@ -96,18 +111,18 @@ static void draw_hour_outer_segment(GContext *ctx, int start, int end, int anim_
   if (swap_direction) {
     graphics_fill_radial(
       ctx,
-      s_center,
-      s_hour_inner_radius,
-      s_base_size + 1,
+      s_hour_rect,
+      GOvalScaleModeFillCircle,
+      s_hour_inset,
       animation_distance(get_segment_angle(anim_start), get_segment_angle(start)),
       get_segment_angle(end)
     );
   } else {
     graphics_fill_radial(
       ctx,
-      s_center,
-      s_hour_inner_radius,
-      s_base_size + 1,
+      s_hour_rect,
+      GOvalScaleModeFillCircle,
+      s_hour_inset,
       get_segment_angle(start),
       animation_distance(get_segment_angle(anim_start), get_segment_angle(end))
     );
@@ -116,11 +131,12 @@ static void draw_hour_outer_segment(GContext *ctx, int start, int end, int anim_
 
 static void draw_hour_inner_segment(GContext *ctx, int start, int end) {
   graphics_context_set_fill_color(ctx, s_colors.hour);
+
   graphics_fill_radial(
     ctx,
-    s_center,
-    0,
-    s_base_size + 1,
+    s_hour_rect,
+    GOvalScaleModeFillCircle,
+    s_base_radius,
     get_segment_angle(start),
     get_segment_angle(end)
   );
@@ -128,11 +144,12 @@ static void draw_hour_inner_segment(GContext *ctx, int start, int end) {
 
 static void _draw_min_outer_segment(GContext *ctx, GColor color, int start, int end) {
   graphics_context_set_fill_color(ctx, color);
+//  APP_LOG(APP_LOG_LEVEL_INFO, "s_hour_rect.size.w: %d", s_hour_inset);
   graphics_fill_radial(
     ctx,
-    s_center,
-    s_minute_inner_radius,
-    s_hour_inner_radius,
+    s_minute_rect,
+    GOvalScaleModeFillCircle,
+    s_minute_inset,
     get_segment_angle(start),
     get_segment_angle(end)
   );
@@ -147,14 +164,14 @@ static void draw_min10_outer_segment(GContext *ctx, int start, int end) {
 }
 
 static void _draw_min_inner_block(GContext *ctx, GColor color, GRect rect) {
-
-  // @TODO remove this once we have teh better circle API
   if (rect.size.w < 0) {
-     ++rect.origin.x;
+    rect.size.w = abs(rect.size.w);
+    rect.origin.x = rect.origin.x - rect.size.w;
   }
 
   if (rect.size.h < 0) {
-    ++rect.origin.y;
+    rect.size.h = abs(rect.size.h);
+    rect.origin.y = rect.origin.y - rect.size.h;
   }
 
   graphics_context_set_fill_color(ctx, color);
@@ -181,7 +198,7 @@ static void draw_outer(GContext *ctx) {
 
   switch (s_time->tm_hour) {
     case 1 :
-      draw_hour_outer_segment(ctx, 1, 11, 25, false);
+      draw_hour_outer_segment(ctx, 14, 22, -2, true);
       break;
 
     case 2 :
@@ -223,14 +240,14 @@ static void draw_outer(GContext *ctx) {
       break;
 
     case 10 :
-      draw_hour_outer_segment(ctx, -6, -1, 1, false);
-      draw_hour_outer_segment(ctx, 13, 18, 11, true);
+      draw_hour_outer_segment(ctx, -6, -2, 1, false);
+      draw_hour_outer_segment(ctx, 14, 18, 11, true);
       draw_hour_outer_segment(ctx, 1, 11, 11, false);
       break;
 
     case 11 :
-      draw_hour_outer_segment(ctx, 1, 11, 13, false);
-      draw_hour_outer_segment(ctx, 13, 23, 25, false);
+      draw_hour_outer_segment(ctx, 2, 10, 14, false);
+      draw_hour_outer_segment(ctx, 14, 22, 26, false);
       break;
 
     case 0 :
@@ -250,7 +267,7 @@ static void draw_inner(GContext *ctx) {
       break;
 
     case 1 :
-      draw_min0_outer_segment(ctx, 1, 11);
+      draw_min0_outer_segment(ctx, 2, 10);
       break;
 
     case 2 :
@@ -338,7 +355,7 @@ static void draw_inner(GContext *ctx) {
       break;
 
     case 1 :
-      draw_min10_outer_segment(ctx, -11, -1);
+      draw_min10_outer_segment(ctx, -10, -2);
       break;
 
     case 2 :
@@ -365,7 +382,7 @@ static void draw_inner(GContext *ctx) {
       draw_min10_inner_block_custom(ctx, GRect(
         s_center.x,
         s_center.y - s_minute_block_size / 5,
-        -s_hour_inner_radius + s_minute_block_size / 5,
+        -s_hour_inset + s_minute_block_size / 5,
         s_minute_block_size
       ));
       draw_min10_inner_block_from_center(ctx, -s_minute_block_size, s_minute_inner_radius);
@@ -516,21 +533,6 @@ static void animate_to_phase(int phase, AnimationAllPhasesCompleteCallback callb
   next_animation(phase < s_animation_phase);
 }
 
-static void main_window_load(Window *window) {
-  Layer *window_layer = window_get_root_layer(window);
-  GRect window_bounds = layer_get_bounds(window_layer);
-
-  s_base_size = (window_bounds.size.w < window_bounds.size.h ? window_bounds.size.w : window_bounds.size.h) / 2;
-  s_hour_inner_radius = s_base_size * OUTER_SEGMENT_RATIO / 10000;
-  s_minute_inner_radius = s_base_size * INNER_SEGMENT_RATIO / 10000;
-  s_minute_block_size = s_base_size * INNER_BLOCK_RATIO / 10000;
-  s_center = GPoint(s_base_size, s_base_size);
-
-  APP_LOG(APP_LOG_LEVEL_INFO, "s_minute_block_size: %d", s_minute_block_size);
-
-  layer_set_update_proc(window_get_root_layer(window), update_layer);
-}
-
 static void main_window_unload(Window *window) {
 
 }
@@ -540,6 +542,8 @@ static void set_time(void) {
   time_t temp = time(NULL);
   s_time = localtime(&temp);
   s_time->tm_hour = s_time->tm_hour % 12;
+//  s_time->tm_hour = 11;
+//  s_time->tm_min = 11;
   animate_to_phase(2, NULL);
 }
 
@@ -557,6 +561,40 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   update_time();
 }
 
+static void main_window_load(Window *window) {
+  Layer *window_layer = window_get_root_layer(window);
+  GRect window_bounds = layer_get_bounds(window_layer);
+
+  s_base_radius = (window_bounds.size.w < window_bounds.size.h ? window_bounds.size.w : window_bounds.size.h) / 2;
+  s_base_diam = s_base_radius * 2;
+  s_hour_inner_radius = s_base_radius * OUTER_SEGMENT_RATIO / 10000;
+  s_hour_inset = s_base_radius - s_hour_inner_radius + 1; // add 1 extra pixel to stop weird gaps in antialiasing
+  s_minute_inner_radius = s_base_radius * INNER_SEGMENT_RATIO / 10000;
+  s_minute_inset = s_hour_inner_radius - s_minute_inner_radius;
+  s_minute_block_size = s_base_radius * INNER_BLOCK_RATIO / 10000;
+  s_center = GPoint(s_base_radius, s_base_radius);
+  s_hour_rect = GRect(window_bounds.size.w / 2 - s_base_radius + 1,
+                    window_bounds.size.h / 2 - s_base_radius + 1,
+                    s_base_radius * 2,
+                    s_base_radius * 2);
+  s_minute_rect = GRect(window_bounds.size.w / 2 - s_hour_inner_radius + 1,
+                        window_bounds.size.h / 2 - s_hour_inner_radius + 1,
+                        s_hour_inner_radius * 2,
+                        s_hour_inner_radius * 2);
+  APP_LOG(APP_LOG_LEVEL_INFO, "s_hour_rect: %d", s_hour_rect.size.w);
+  APP_LOG(APP_LOG_LEVEL_INFO, "s_minute_inner_radius: %d", s_minute_inner_radius);
+  APP_LOG(APP_LOG_LEVEL_INFO, "s_minute_inset: %d", s_minute_inset);
+  layer_set_update_proc(window_get_root_layer(window), update_layer);
+
+}
+
+static void trigger_animation(bool in_focus) {
+  if(s_launched) {
+    s_launched = true;
+    update_time();
+  }
+}
+
 static void init() {
   // Create main Window element and assign to pointer
   s_window = window_create();
@@ -567,14 +605,15 @@ static void init() {
     .unload = main_window_unload
   });
 
+  app_focus_service_subscribe_handlers((AppFocusHandlers) {
+    .did_focus = trigger_animation
+  });
+
   // Show the Window on the watch, with animated=true
   window_stack_push(s_window, true);
 
   // Register with TickTimerService
   tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
-
-  // Make sure the time is displayed from the start
-  update_time();
 
   s_colors.background = GColorFromHEX(0x000000);
   s_colors.hour = GColorFromHEX(0xAA0000);
