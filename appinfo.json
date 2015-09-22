@@ -9,6 +9,7 @@
   "watchapp": {
     "watchface": true
   },
+  "capabilities": [ "configurable" ],
   "appKeys": {
     "color_background": 0,
     "color_hour": 1,

@@ -34,14 +34,6 @@ static int s_animation_phase_timing[2] = {
   400
 };
 
-
-
-
-
-
-
-
-
 static int s_hour_animation_scale[12] = {
   450,
   700,

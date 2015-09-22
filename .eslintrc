@@ -1,0 +1,11 @@
+{
+  "extends": "pebble",
+  "env" : {
+    "browser": true
+  },
+  "globals": {
+    "Pebble": true
+  },
+  "rules" : {
+  }
+}
