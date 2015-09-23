@@ -27,7 +27,6 @@ static struct tm *s_time;
 
 // max width or height we can make our shapes fit in
 static int s_base_radius;
-static int s_base_diam;
 static int s_hour_inner_radius;
 static int s_hour_inset;
 static int s_minute_inner_radius;
@@ -66,8 +65,6 @@ static int s_hour_animation_scale[12] = {
 
 static struct Colors s_colors;
 
-static int s_demo_time = 0;
-
 // DECLARATIONS
 static void next_animation(bool reverse);
 
@@ -93,7 +90,6 @@ static void draw_outer_expand(GContext *ctx) {
     ctx,
     grect_inset(s_hour_rect, GEdgeInsets(animation_distance(s_base_radius - 7, 0))),
     GOvalScaleModeFillCircle,
-//    animation_distance(0, s_base_radius),
     s_base_radius,
     get_segment_angle(0),
     get_segment_angle(24)
@@ -389,7 +385,7 @@ static void draw_inner(GContext *ctx) {
       draw_min10_inner_block_custom(ctx, GRect(
         s_center.x,
         s_center.y - s_minute_block_size / 5,
-        -s_hour_inset + s_minute_block_size / 5,
+        -s_hour_inner_radius + s_minute_block_size / 5,
         s_minute_block_size
       ));
       draw_min10_inner_block_from_center(ctx, -s_minute_block_size, s_minute_inner_radius);
@@ -549,8 +545,8 @@ static void set_time(void) {
   time_t temp = time(NULL);
   s_time = localtime(&temp);
   s_time->tm_hour = s_time->tm_hour % 12;
-//  s_time->tm_hour = 11;
-//  s_time->tm_min = 11;
+//  s_time->tm_hour = 1;
+//  s_time->tm_min = 8;
   animate_to_phase(2, NULL);
 }
 
@@ -573,7 +569,6 @@ static void main_window_load(Window *window) {
   GRect window_bounds = layer_get_bounds(window_layer);
 
   s_base_radius = (window_bounds.size.w < window_bounds.size.h ? window_bounds.size.w : window_bounds.size.h) / 2;
-  s_base_diam = s_base_radius * 2;
   s_hour_inner_radius = s_base_radius * OUTER_SEGMENT_RATIO / 10000;
   s_hour_inset = s_base_radius - s_hour_inner_radius + 1; // add 1 extra pixel to stop weird gaps in antialiasing
   s_minute_inner_radius = s_base_radius * INNER_SEGMENT_RATIO / 10000;
