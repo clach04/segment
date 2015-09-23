@@ -1,9 +1,6 @@
 'use strict';
 
 var hashData = JSON.parse('$$DATA$$' || null);
-
-console.log('hashData', hashData);
-
 var settings = {
   preset: hashData.preset || 'preset-0',
   colorBackground: hashData.colorBackground || '0x000000',
@@ -59,8 +56,12 @@ $(function() {
 
   $('#save-btn').click(function() {
     // window.localStorage.setItem('settings', JSON.stringify(settings));
-    console.log('pebblejs://close#' + encodeURIComponent(JSON.stringify(settings)));
     location.href = 'pebblejs://close#' + encodeURIComponent(JSON.stringify(settings));
+  });
+
+  $('#cancel-btn').click(function() {
+    // window.localStorage.setItem('settings', JSON.stringify(settings));
+    location.href = 'pebblejs://close';
   });
 
   // all complete

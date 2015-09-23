@@ -657,17 +657,10 @@ static void init() {
 
   // Show the Window on the watch, with animated=true
   window_stack_push(s_window, true);
-  int background = persist_read_int(COLOR_BACKGROUND);
-  s_colors.background = GColorFromHEX(background ? background :0x000000);
-
-  int hour = persist_read_int(COLOR_HOUR);
-  s_colors.hour = GColorFromHEX(hour ? hour : 0xAA0000);
-
-  int min_left = persist_read_int(COLOR_MIN_LEFT);
-  s_colors.min_left = GColorFromHEX(min_left ? min_left :0xAAAAAA);
-
-  int min_right = persist_read_int(COLOR_MIN_RIGHT);
-  s_colors.min_right = GColorFromHEX(min_right ? min_right : 0xFFFFFF);
+  s_colors.background = GColorFromHEX(persist_exists(COLOR_BACKGROUND) ? persist_read_int(COLOR_BACKGROUND) : 0x000000);
+  s_colors.hour = GColorFromHEX(persist_exists(COLOR_HOUR) ? persist_read_int(COLOR_HOUR) : 0xAA0000);
+  s_colors.min_left = GColorFromHEX(persist_exists(COLOR_MIN_LEFT) ? persist_read_int(COLOR_MIN_LEFT) :0xAAAAAA);
+  s_colors.min_right = GColorFromHEX(persist_exists(COLOR_MIN_RIGHT) ? persist_read_int(COLOR_MIN_RIGHT) : 0xFFFFFF);
 }
 
 static void deinit() {

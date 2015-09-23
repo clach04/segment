@@ -30,6 +30,8 @@ Pebble.addEventListener('showConfiguration', function(e) {
 Pebble.addEventListener('webviewclosed', function(e) {
   // Decode and parse config data as JSON
   var settings = JSON.parse(decodeURIComponent(e.response));
+  if (!settings) return;
+
   localStorage.setItem('settings', JSON.stringify(settings));
 
   // Send settings to Pebble watchapp
