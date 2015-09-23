@@ -6,8 +6,9 @@ var del = require('del');
 var template = require('gulp-template');
 var data = require('gulp-data');
 var inline = require('gulp-inline');
-var uglify = require('gulp-uglify');
 var concat = require('gulp-concat');
+var minifyInline = require('gulp-minify-inline');
+var minifyHTML = require('gulp-minify-html');
 
 gulp.task('clean', function(done) {
   del(['src/js/pebble-js-app.js', 'tmp']).then(function() {
@@ -26,13 +27,13 @@ gulp.task('build', ['clean'], function() {
   };
 
   gulp.src('config/index.html')
-    .pipe(inline({
-      base: 'public/',
-      //js: uglify()
-      // css: minifyCss(),
-      // disabledTypes: ['svg', 'img', 'js'], // Only inline css files
-      // ignore: ['./css/do-not-inline-me.css']
+    .pipe(inline())
+    .pipe(minifyInline({
+      js: {},
+      jsSelector: 'script[uglify]'
     }))
+    .pipe(minifyHTML())
+    .pipe(gulp.dest('tmp/'))
     .pipe(dataUriStream())
     .pipe(data(jsCompile));
 });

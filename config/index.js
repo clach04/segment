@@ -1,16 +1,11 @@
 'use strict';
 
-var hashData; try {
-  hashData = JSON.parse('$$DATA$$' || {});
-} catch (e) {
-  hashData = {};
-}
 var settings = {
-  preset: hashData.preset || 'preset-0',
-  colorBackground: hashData.colorBackground || '0x000000',
-  colorHour: hashData.colorHour || '0xAA0000',
-  colorMinLeft: hashData.colorMinLeft || '0xAAAAAA',
-  colorMinRight: hashData.colorMinRight || '0xFFFFFF'
+  preset: window.hashData.preset || 'preset-0',
+  colorBackground: window.hashData.colorBackground || '0x000000',
+  colorHour: window.hashData.colorHour || '0xAA0000',
+  colorMinLeft: window.hashData.colorMinLeft || '0xAAAAAA',
+  colorMinRight: window.hashData.colorMinRight || '0xFFFFFF'
 };
 
 var presets = [
