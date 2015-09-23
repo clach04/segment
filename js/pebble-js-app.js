@@ -15,7 +15,7 @@ Pebble.addEventListener('ready', function(e) {
 Pebble.addEventListener('showConfiguration', function(e) {
   var settings;
   try {
-    settings = JSON.parse(localStorage.getItem('settings'));
+    settings = JSON.parse(localStorage.getItem('settings')) || {};
   } catch (e) {
     console.log(e);
     settings = {};

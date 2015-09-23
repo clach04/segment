@@ -7,6 +7,7 @@ var template = require('gulp-template');
 var data = require('gulp-data');
 var inline = require('gulp-inline');
 var uglify = require('gulp-uglify');
+var concat = require('gulp-concat');
 
 gulp.task('clean', function(done) {
   del(['src/js/pebble-js-app.js', 'tmp']).then(function() {
@@ -18,7 +19,8 @@ gulp.task('build', ['clean'], function() {
   var jsCompile = function(file) {
 
     // @TODO this is super weird but it works...
-    gulp.src('js/pebble-js-app.js')
+    gulp.src(['bower_components/base64/base64.min.js', 'js/pebble-js-app.js'])
+      .pipe(concat('pebble-js-app.js'))
       .pipe(template({configPage: file.contents.toString()}))
       .pipe(gulp.dest('src/js/'));
   };

@@ -19,9 +19,6 @@
             <label class="item">
               Preset
               <select id="preset-select" name="preset" class="item-select">
-                <option id="preset-0" class="item-select-option" value="0x000000,0xAA0000,0xAAAAAA,0xFFFFFF">Red Tole</option>
-                <option id="preset-1" class="item-select-option" value="0x0000AA,0x00AAFF,0x00FFFF,0xAAFFFF">Deep Ocean</option>
-                <option id="preset-2" class="item-select-option" value="0xAA0000,0xFF0000,0xFFAA55,0xFFFF00">Sunburst</option>
                 <option id="preset-custom" class="item-select-option" value="">--Custom--</option>
               </select>
             </label>
@@ -48,10 +45,25 @@
           </div>
         </div>
       </div>
-      <div class="item-container hide">
-        <div class="button-container">
-          <input id="cancel-btn" type="button" class="item-button" value="Cancel">
-          <input id="save-btn" type="button" class="item-button" value="Save">
+
+       <div class="item-container hide">
+        <div class="item-container-header">Direct input</div>
+        <div class="item-container-content">
+          <label class="item">
+            <div class="item-input-wrapper item-input-wrapper-button">
+              <input id="direct-input" type="text" class="item-input" name="direct-input">
+            </div>
+            <input id="direct-input-btn" type="button" class="item-button item-input-button" value="Update">
+          </label>
+          <div class="item-container-footer">
+            Copy the contents of this field to share your color combination with a friend.
+          </div>
+        </div>
+        <div class="item-container hide">
+          <div class="button-container">
+            <input id="cancel-btn" type="button" class="item-button" value="Cancel">
+            <input id="save-btn" type="button" class="item-button" value="Save">
+          </div>
         </div>
       </div>
     </form>
