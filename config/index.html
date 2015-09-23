@@ -1,10 +1,62 @@
-<html>
-<head></head>
-<body>
-<script>
-  alert('worked');
-  // Close config page and return data
-  location.href = 'pebblejs://close#success';
-</script>
-</body>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <link rel="stylesheet" href="../bower_components/pebble-slate/dist/css/slate.min.css">
+    <link rel="stylesheet" href="index.css">
+  </head>
+  <body>
+    <form id="main-form">
+      <div class="item-container">
+        <div class="item-container-header"><h1>Segment</h1></div>
+        <div class="item-container-footer">
+          By Keegan Lillo - <a href="http://lillo.me" target="_blank">Lillo.me</a>
+        </div>
+      </div>
+      <div class="item-container hide">
+        <div class="item-container-header">Personalize</div>
+        <div class="item-container-content">
+          <div class="item-container-content">
+            <label class="item">
+              Preset
+              <select id="preset-select" name="preset" class="item-select">
+                <option id="preset-0" class="item-select-option" value="0x000000,0xAA0000,0xAAAAAA,0xFFFFFF">Red Tole</option>
+                <option id="preset-1" class="item-select-option" value="0x0000AA,0x00AAFF,0x00FFFF,0xAAFFFF">Deep Ocean</option>
+                <option id="preset-2" class="item-select-option" value="0xAA0000,0xFF0000,0xFFAA55,0xFFFF00">Sunburst</option>
+                <option id="preset-custom" class="item-select-option" value="">--Custom--</option>
+              </select>
+            </label>
+          </div>
+        </div>
+        <div class="item-container hide">
+          <div class="item-container-content">
+            <label class="item">
+              Background
+              <input type="text" class="item-color item-color-sunny" name="colorBackground" value="0xFFFFFF">
+            </label>
+            <label class="item">
+              Hour
+              <input type="text" class="item-color item-color-sunny" name="colorHour" value="0xFFFFFF">
+            </label>
+            <label class="item">
+              Left Minute Digit
+              <input type="text" class="item-color item-color-sunny" name="colorMinLeft" value="0xFFFFFF">
+            </label>
+            <label class="item">
+              Right Minute Digit
+              <input type="text" class="item-color item-color-sunny" name="colorMinRight" value="0xFFFFFF">
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="item-container hide">
+        <div class="button-container">
+          <input id="cancel-btn" type="button" class="item-button" value="Cancel">
+          <input id="save-btn" type="button" class="item-button" value="Save">
+        </div>
+      </div>
+    </form>
+
+    <script src="../bower_components/pebble-slate/dist/js/slate.min.js"></script>
+    <script src="index.js"></script>
+  </body>
 </html>

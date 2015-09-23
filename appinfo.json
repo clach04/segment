@@ -3,18 +3,19 @@
   "shortName": "Segment",
   "longName": "Segment",
   "companyName": "Keegan Lillo",
-  "versionLabel": "1.0",
+  "versionLabel": "1.27",
   "sdkVersion": "3",
   "targetPlatforms": ["basalt", "chalk"],
   "watchapp": {
     "watchface": true
   },
-  "capabilities": [ ],
+  "capabilities": [ "configurable" ],
   "appKeys": {
-    "color_background": 0,
-    "color_hour": 1,
-    "color_min1": 2,
-    "color_min0": 3
+    "preset": 0,
+    "colorBackground": 1,
+    "colorHour": 2,
+    "colorMinLeft": 3,
+    "colorMinRight": 4
   },
   "resources": {
     "media": []

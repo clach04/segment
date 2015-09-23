@@ -10,13 +10,20 @@ typedef void (*AnimationAllPhasesCompleteCallback)(void);
 struct Colors {
   GColor background;
   GColor hour;
-  GColor min10;
-  GColor min0;
+  GColor min_left;
+  GColor min_right;
+};
+
+enum APP_MESSAGE_KEYS {
+  PRESET,
+  COLOR_BACKGROUND,
+  COLOR_HOUR,
+  COLOR_MIN_LEFT,
+  COLOR_MIN_RIGHT,
 };
 
 static Window *s_window;
 static struct tm *s_time;
-static bool s_launched = false;
 
 // max width or height we can make our shapes fit in
 static int s_base_radius;
@@ -156,11 +163,11 @@ static void _draw_min_outer_segment(GContext *ctx, GColor color, int start, int 
 }
 
 static void draw_min0_outer_segment(GContext *ctx, int start, int end) {
-  _draw_min_outer_segment(ctx, s_colors.min0, start, end);
+  _draw_min_outer_segment(ctx, s_colors.min_right, start, end);
 }
 
 static void draw_min10_outer_segment(GContext *ctx, int start, int end) {
-  _draw_min_outer_segment(ctx, s_colors.min10, start, end);
+  _draw_min_outer_segment(ctx, s_colors.min_left, start, end);
 }
 
 static void _draw_min_inner_block(GContext *ctx, GColor color, GRect rect) {
@@ -179,19 +186,19 @@ static void _draw_min_inner_block(GContext *ctx, GColor color, GRect rect) {
 }
 
 static void draw_min0_inner_block_from_center(GContext *ctx, int width, int height) {
-  _draw_min_inner_block(ctx, s_colors.min0, GRect(s_center.x, s_center.y, width, height));
+  _draw_min_inner_block(ctx, s_colors.min_right, GRect(s_center.x, s_center.y, width, height));
 }
 
 static void draw_min10_inner_block_from_center(GContext *ctx, int width, int height) {
-  _draw_min_inner_block(ctx, s_colors.min10, GRect(s_center.x, s_center.y, width, height));
+  _draw_min_inner_block(ctx, s_colors.min_left, GRect(s_center.x, s_center.y, width, height));
 }
 
 static void draw_min0_inner_block_custom(GContext *ctx,  GRect rect) {
-  _draw_min_inner_block(ctx, s_colors.min0, rect);
+  _draw_min_inner_block(ctx, s_colors.min_right, rect);
 }
 
 static void draw_min10_inner_block_custom(GContext *ctx,  GRect rect) {
-  _draw_min_inner_block(ctx, s_colors.min10, rect);
+  _draw_min_inner_block(ctx, s_colors.min_left, rect);
 }
 
 static void draw_outer(GContext *ctx) {
@@ -588,14 +595,53 @@ static void main_window_load(Window *window) {
 
 }
 
-static void trigger_animation(bool in_focus) {
-  if(s_launched) {
-    s_launched = true;
-    update_time();
+static void did_focus(bool in_focus) {
+  if(!in_focus) { return; }
+
+  app_focus_service_unsubscribe();
+
+  // Register with TickTimerService
+  tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
+  update_time();
+}
+
+void in_dropped_handler(AppMessageResult reason, void *context) {
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Incoming message dropped: %d", reason);
+}
+
+void in_received_handler(DictionaryIterator *received, void *context) {
+  Tuple *tuple;
+
+  tuple = dict_find(received, COLOR_BACKGROUND);
+  if(tuple) {
+    s_colors.background = GColorFromHEX(tuple->value->int32);
+    persist_write_int(COLOR_BACKGROUND, tuple->value->int32);
   }
+  tuple = dict_find(received, COLOR_HOUR);
+  if(tuple) {
+    s_colors.hour = GColorFromHEX(tuple->value->int32);
+    persist_write_int(COLOR_HOUR, tuple->value->int32);
+  }
+  tuple = dict_find(received, COLOR_MIN_LEFT);
+  if(tuple) {
+    s_colors.min_left = GColorFromHEX(tuple->value->int32);
+    persist_write_int(COLOR_MIN_LEFT, tuple->value->int32);
+  }
+  tuple = dict_find(received, COLOR_MIN_RIGHT);
+  if(tuple) {
+    s_colors.min_right = GColorFromHEX(tuple->value->int32);
+    persist_write_int(COLOR_MIN_RIGHT, tuple->value->int32);
+  }
+
+  layer_mark_dirty(window_get_root_layer(s_window));
+
 }
 
 static void init() {
+  app_message_register_inbox_dropped(in_dropped_handler);
+  app_message_register_inbox_received(in_received_handler);
+  app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
+
   // Create main Window element and assign to pointer
   s_window = window_create();
 
@@ -606,19 +652,22 @@ static void init() {
   });
 
   app_focus_service_subscribe_handlers((AppFocusHandlers) {
-    .did_focus = trigger_animation
+    .did_focus = did_focus
   });
 
   // Show the Window on the watch, with animated=true
   window_stack_push(s_window, true);
+  int background = persist_read_int(COLOR_BACKGROUND);
+  s_colors.background = GColorFromHEX(background ? background :0x000000);
 
-  // Register with TickTimerService
-  tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
+  int hour = persist_read_int(COLOR_HOUR);
+  s_colors.hour = GColorFromHEX(hour ? hour : 0xAA0000);
 
-  s_colors.background = GColorFromHEX(0x000000);
-  s_colors.hour = GColorFromHEX(0xAA0000);
-  s_colors.min10 = GColorFromHEX(0xAAAAAA);
-  s_colors.min0 = GColorFromHEX(0xFFFFFF);
+  int min_left = persist_read_int(COLOR_MIN_LEFT);
+  s_colors.min_left = GColorFromHEX(min_left ? min_left :0xAAAAAA);
+
+  int min_right = persist_read_int(COLOR_MIN_RIGHT);
+  s_colors.min_right = GColorFromHEX(min_right ? min_right : 0xFFFFFF);
 }
 
 static void deinit() {

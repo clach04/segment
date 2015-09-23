@@ -1,0 +1,19 @@
+.hide {
+  display:none;
+}
+.item-styled-color .value {
+  box-sizing: border-box;
+  height: 26px;
+}
+
+input[type="button"]:disabled {
+  background-color: #ccc;
+}
+
+#cancel-btn {
+  background-color: #444;
+}
+
+.item-button {
+  width: 45%;
+}
