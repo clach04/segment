@@ -10,7 +10,10 @@ var settings = {
 
 var presets = [
   {name: 'Red Tole', val: '0x000000,0xAA0000,0xAAAAAA,0xFFFFFF'},
-  {name: 'Old Timey', val: '0xFFFFFF,0x000000,0x555555,0xAAAAAA'}
+  {name: 'Old Timey', val: '0xFFFFFF,0x000000,0x555555,0xAAAAAA'},
+  {name: 'Lost Woods', val: '0xaaffaa,0x005500,0x00aa00,0x00ff00'},
+  {name: 'Blueberry', val: '0x000055,0x0055ff,0x55aaff,0xaaffff'},
+  {name: 'Wild Flower', val: '0x000000,0xff0000,0xff5500,0xffaaaa'}
 ];
 
 function setColors() {
