@@ -2,19 +2,19 @@
 
 var settings = {
   preset: window.hashData.preset || 'preset-0',
-  colorBackground: window.hashData.colorBackground || '0x000000',
-  colorHour: window.hashData.colorHour || '0xAA0000',
-  colorMinLeft: window.hashData.colorMinLeft || '0xAAAAAA',
-  colorMinRight: window.hashData.colorMinRight || '0xFFFFFF'
+  colorBackground: window.hashData.colorBackground || '0x000055',
+  colorHour: window.hashData.colorHour || '0x0055ff',
+  colorMinLeft: window.hashData.colorMinLeft || '0x55aaff',
+  colorMinRight: window.hashData.colorMinRight || '0xaaffff'
 };
 
 var presets = [
-  {name: 'Red Tole', val: '0x000000,0xAA0000,0xAAAAAA,0xFFFFFF'},
-  {name: 'Old Timey', val: '0xFFFFFF,0x000000,0x555555,0xAAAAAA'},
-  {name: 'Lost Woods', val: '0xaaffaa,0x005500,0x00aa00,0x00ff00'},
   {name: 'Blueberry', val: '0x000055,0x0055ff,0x55aaff,0xaaffff'},
-  {name: 'Wild Flower', val: '0x000000,0xff0000,0xff5500,0xffaaaa'},
-  {name: 'Sunburst', val: '0x550000,0xff0000,0xffaa00,0xffff00'}
+  {name: 'Lost Woods', val: '0xaaffaa,0x005500,0x00aa00,0x00ff00'},
+  {name: 'Old Timey', val: '0xFFFFFF,0x000000,0x555555,0xAAAAAA'},
+  {name: 'Red Tole', val: '0x000000,0xAA0000,0xAAAAAA,0xFFFFFF'},
+  {name: 'Sunburst', val: '0x550000,0xff0000,0xffaa00,0xffff00'},
+  {name: 'Wild Flower', val: '0x000000,0xff0000,0xff5500,0xffaaaa'}
 ];
 
 function setColors() {
