@@ -3,7 +3,7 @@
   "shortName": "Segment",
   "longName": "Segment",
   "companyName": "Keegan Lillo",
-  "versionLabel": "1.46",
+  "versionLabel": "1.47",
   "sdkVersion": "3",
   "targetPlatforms": ["basalt", "chalk"],
   "watchapp": {

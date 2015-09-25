@@ -70,7 +70,7 @@ $(function() {
 
   // event listeners
 
-  $('[name="preset"]').change(updateSettings);
+  $('#preset-select').change(updateSettings);
 
   $('.item-color').change(function(event, keepPreset) {
     var $this = $(this);
@@ -78,7 +78,7 @@ $(function() {
 
     settings[name] = $this.val();
     if (!keepPreset) {
-      $('#preset-select').val('').trigger('change');
+      $('#preset-custom').prop('selected', true).trigger('change');
     }
     updateDirectInput();
   });
