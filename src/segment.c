@@ -158,11 +158,11 @@ static void _draw_min_outer_segment(GContext *ctx, GColor color, int start, int 
   );
 }
 
-static void draw_min0_outer_segment(GContext *ctx, int start, int end) {
+static void draw_right_min_outer_segment(GContext *ctx, int start, int end) {
   _draw_min_outer_segment(ctx, s_colors.min_right, start, end);
 }
 
-static void draw_min10_outer_segment(GContext *ctx, int start, int end) {
+static void draw_left_min_outer_segment(GContext *ctx, int start, int end) {
   _draw_min_outer_segment(ctx, s_colors.min_left, start, end);
 }
 
@@ -181,19 +181,19 @@ static void _draw_min_inner_block(GContext *ctx, GColor color, GRect rect) {
   graphics_fill_rect(ctx, rect, 0, GCornerNone);
 }
 
-static void draw_min0_inner_block_from_center(GContext *ctx, int width, int height) {
+static void draw_right_min_inner_block_from_center(GContext *ctx, int width, int height) {
   _draw_min_inner_block(ctx, s_colors.min_right, GRect(s_center.x, s_center.y, width, height));
 }
 
-static void draw_min10_inner_block_from_center(GContext *ctx, int width, int height) {
+static void draw_left_min_inner_block_from_center(GContext *ctx, int width, int height) {
   _draw_min_inner_block(ctx, s_colors.min_left, GRect(s_center.x, s_center.y, width, height));
 }
 
-static void draw_min0_inner_block_custom(GContext *ctx,  GRect rect) {
+static void draw_min_right_inner_block_custom(GContext *ctx, GRect rect) {
   _draw_min_inner_block(ctx, s_colors.min_right, rect);
 }
 
-static void draw_min10_inner_block_custom(GContext *ctx,  GRect rect) {
+static void draw_left_min_inner_block_custom(GContext *ctx, GRect rect) {
   _draw_min_inner_block(ctx, s_colors.min_left, rect);
 }
 
@@ -262,142 +262,149 @@ static void draw_outer(GContext *ctx) {
 }
 
 static void draw_inner(GContext *ctx) {
-  switch (s_time->tm_min % 10) {
-    case 0 :
-      draw_min0_inner_block_from_center(ctx, s_minute_block_size, s_minute_inner_radius);
-      draw_min0_inner_block_from_center(ctx, s_minute_block_size, -s_minute_inner_radius);
-      draw_min0_outer_segment(ctx, 0, 12);
-      break;
-
-    case 1 :
-      draw_min0_outer_segment(ctx, 2, 10);
-      break;
-
-    case 2 :
-      draw_min0_outer_segment(ctx, 0, 6);
-      draw_min0_outer_segment(ctx, 8, 12);
-      draw_min0_inner_block_from_center(ctx, s_minute_inner_radius, -s_minute_block_size);
-      draw_min0_inner_block_from_center(ctx, s_minute_block_size, s_minute_inner_radius);
-      break;
-
-    case 3 :
-      draw_min0_outer_segment(ctx, 1, 11);
-      draw_min0_inner_block_custom(ctx, GRect(
-        s_center.x + s_minute_inner_radius,
-        s_center.y - s_minute_block_size / 2,
-        -s_minute_block_size,
-        s_minute_block_size
-      ));
-      break;
-
-    case 4 :
-      draw_min0_outer_segment(ctx, 3, 10);
-      draw_min0_inner_block_from_center(ctx, s_minute_block_size, -s_minute_inner_radius);
-      draw_min0_inner_block_custom(ctx, GRect(
-        s_center.x,
-        s_center.y - s_minute_block_size / 5,
-        s_minute_inner_radius,
-        s_minute_block_size
-      ));
-      break;
-
-    case 5 :
-      draw_min0_outer_segment(ctx, 0, 4);
-      draw_min0_outer_segment(ctx, 6, 12);
-      draw_min0_inner_block_from_center(ctx, s_minute_inner_radius, s_minute_block_size);
-      draw_min0_inner_block_from_center(ctx, s_minute_block_size, -s_minute_inner_radius);
-      break;
-
-    case 6 :
-      draw_min0_outer_segment(ctx, 6, 12);
-      draw_min0_inner_block_from_center(ctx, s_minute_inner_radius, s_minute_block_size);
-      draw_min0_inner_block_from_center(ctx, s_minute_block_size, -s_minute_inner_radius);
-      draw_min0_inner_block_from_center(ctx, s_minute_block_size, s_minute_inner_radius);
-      break;
-
-    case 7 :
-      draw_min0_inner_block_custom(ctx, GRect(
-        s_center.x + s_minute_inner_radius,
-        s_center.y,
-        -s_minute_block_size,
-        -s_minute_block_size
-      ));
-      draw_min0_outer_segment(ctx, 0, 10);
-      break;
-
-    case 8 :
-      draw_min0_inner_block_from_center(ctx, s_minute_block_size, s_minute_inner_radius);
-      draw_min0_inner_block_from_center(ctx, s_minute_block_size, -s_minute_inner_radius);
-      draw_min0_inner_block_custom(ctx, GRect(
-        s_center.x,
-        s_center.y - s_minute_block_size / 2,
-        s_minute_inner_radius,
-        s_minute_block_size
-      ));
-      draw_min0_outer_segment(ctx, 0, 12);
-      break;
-
-    case 9 :
-      draw_min0_inner_block_from_center(ctx, s_minute_block_size, -s_minute_inner_radius);
-      draw_min0_inner_block_custom(ctx, GRect(
-        s_center.x,
-        s_center.y - s_minute_block_size / 2,
-        s_minute_inner_radius,
-        s_minute_block_size
-      ));
-      draw_min0_outer_segment(ctx, 0, 12);
-      break;
-
-  }
-
   switch (s_time->tm_min / 10) {
     case 0 :
-      draw_min10_inner_block_from_center(ctx, -s_minute_block_size, s_minute_inner_radius);
-      draw_min10_inner_block_from_center(ctx, -s_minute_block_size, -s_minute_inner_radius);
-      draw_min10_outer_segment(ctx, -12, 0);
+      draw_left_min_inner_block_from_center(ctx, -s_minute_block_size, s_minute_inner_radius);
+      draw_left_min_inner_block_from_center(ctx, -s_minute_block_size, -s_minute_inner_radius);
+      draw_left_min_outer_segment(ctx, -12, 0);
       break;
 
     case 1 :
-      draw_min10_outer_segment(ctx, -10, -2);
+      draw_left_min_outer_segment(ctx, -10, -2);
       break;
 
     case 2 :
-      draw_min10_inner_block_from_center(ctx, -s_minute_inner_radius, s_minute_block_size);
-      draw_min10_inner_block_from_center(ctx, -s_minute_block_size, -s_minute_inner_radius);
-      draw_min10_outer_segment(ctx, -4, 0);
-      draw_min10_outer_segment(ctx, -12, -6);
+      draw_left_min_inner_block_from_center(ctx, -s_minute_inner_radius, s_minute_block_size);
+      draw_left_min_inner_block_from_center(ctx, -s_minute_block_size, -s_minute_inner_radius);
+      draw_left_min_outer_segment(ctx, -4, 0);
+      draw_left_min_outer_segment(ctx, -12, -6);
       break;
 
     case 3 :
-      draw_min10_inner_block_custom(ctx, GRect(
+      draw_left_min_inner_block_custom(ctx, GRect(
         s_center.x - s_minute_block_size,
         s_center.y - s_minute_block_size / 2,
         -s_minute_block_size,
         s_minute_block_size
       ));
-      draw_min10_inner_block_from_center(ctx, -s_minute_block_size, s_minute_inner_radius);
-      draw_min10_inner_block_from_center(ctx, -s_minute_block_size, -s_minute_inner_radius);
-      draw_min10_outer_segment(ctx, -4, 0);
-      draw_min10_outer_segment(ctx, 12, 16);
+      draw_left_min_inner_block_from_center(ctx, -s_minute_block_size, s_minute_inner_radius);
+      draw_left_min_inner_block_from_center(ctx, -s_minute_block_size, -s_minute_inner_radius);
+      draw_left_min_outer_segment(ctx, -4, 0);
+      draw_left_min_outer_segment(ctx, 12, 16);
       break;
 
     case 4 :
-      draw_min10_inner_block_custom(ctx, GRect(
+      draw_left_min_inner_block_custom(ctx, GRect(
         s_center.x,
         s_center.y - s_minute_block_size / 5,
         -s_hour_inner_radius + s_minute_block_size / 5,
         s_minute_block_size
       ));
-      draw_min10_inner_block_from_center(ctx, -s_minute_block_size, s_minute_inner_radius);
-      draw_min10_inner_block_from_center(ctx, -s_minute_block_size, -s_minute_inner_radius);
-      draw_min10_outer_segment(ctx, -7, -3);
+      draw_left_min_inner_block_from_center(ctx, -s_minute_block_size, s_minute_inner_radius);
+      draw_left_min_inner_block_from_center(ctx, -s_minute_block_size, -s_minute_inner_radius);
+      draw_left_min_outer_segment(ctx, -7, -3);
       break;
 
     case 5 :
-      draw_min10_inner_block_from_center(ctx, -s_minute_inner_radius, -s_minute_block_size);
-      draw_min10_inner_block_from_center(ctx, -s_minute_block_size, s_minute_inner_radius);
-      draw_min10_outer_segment(ctx, -6, 0);
-      draw_min10_outer_segment(ctx, -12, -8);
+      draw_left_min_inner_block_from_center(ctx, -s_minute_inner_radius, -s_minute_block_size);
+      draw_left_min_inner_block_from_center(ctx, -s_minute_block_size, s_minute_inner_radius);
+      draw_left_min_outer_segment(ctx, -6, 0);
+      draw_left_min_outer_segment(ctx, -12, -8);
+      break;
+  }
+
+  graphics_context_set_fill_color(ctx, s_colors.background);
+  graphics_fill_rect(ctx, GRect(
+    s_center.x,
+    s_center.y - s_hour_inner_radius,
+    1,
+    s_hour_inner_radius * 2
+  ), 0, GCornerNone);
+
+  switch (s_time->tm_min % 10) {
+    case 0 :
+      draw_right_min_inner_block_from_center(ctx, s_minute_block_size, s_minute_inner_radius);
+      draw_right_min_inner_block_from_center(ctx, s_minute_block_size, -s_minute_inner_radius);
+      draw_right_min_outer_segment(ctx, 0, 12);
+      break;
+
+    case 1 :
+      draw_right_min_outer_segment(ctx, 2, 10);
+      break;
+
+    case 2 :
+      draw_right_min_outer_segment(ctx, 0, 6);
+      draw_right_min_outer_segment(ctx, 8, 12);
+      draw_right_min_inner_block_from_center(ctx, s_minute_inner_radius, -s_minute_block_size);
+      draw_right_min_inner_block_from_center(ctx, s_minute_block_size, s_minute_inner_radius);
+      break;
+
+    case 3 :
+      draw_right_min_outer_segment(ctx, 1, 11);
+      draw_min_right_inner_block_custom(ctx, GRect(
+        s_center.x + s_minute_inner_radius,
+        s_center.y - s_minute_block_size / 2,
+        -s_minute_block_size,
+        s_minute_block_size
+      ));
+      break;
+
+    case 4 :
+      draw_right_min_outer_segment(ctx, 3, 10);
+      draw_right_min_inner_block_from_center(ctx, s_minute_block_size, -s_minute_inner_radius);
+      draw_min_right_inner_block_custom(ctx, GRect(
+        s_center.x,
+        s_center.y - s_minute_block_size / 5,
+        s_minute_inner_radius,
+        s_minute_block_size
+      ));
+      break;
+
+    case 5 :
+      draw_right_min_outer_segment(ctx, 0, 4);
+      draw_right_min_outer_segment(ctx, 6, 12);
+      draw_right_min_inner_block_from_center(ctx, s_minute_inner_radius, s_minute_block_size);
+      draw_right_min_inner_block_from_center(ctx, s_minute_block_size, -s_minute_inner_radius);
+      break;
+
+    case 6 :
+      draw_right_min_outer_segment(ctx, 6, 12);
+      draw_right_min_inner_block_from_center(ctx, s_minute_inner_radius, s_minute_block_size);
+      draw_right_min_inner_block_from_center(ctx, s_minute_block_size, -s_minute_inner_radius);
+      draw_right_min_inner_block_from_center(ctx, s_minute_block_size, s_minute_inner_radius);
+      break;
+
+    case 7 :
+      draw_min_right_inner_block_custom(ctx, GRect(
+        s_center.x + s_minute_inner_radius,
+        s_center.y,
+        -s_minute_block_size,
+        -s_minute_block_size
+      ));
+      draw_right_min_outer_segment(ctx, 0, 10);
+      break;
+
+    case 8 :
+      draw_right_min_inner_block_from_center(ctx, s_minute_block_size, s_minute_inner_radius);
+      draw_right_min_inner_block_from_center(ctx, s_minute_block_size, -s_minute_inner_radius);
+      draw_min_right_inner_block_custom(ctx, GRect(
+        s_center.x,
+        s_center.y - s_minute_block_size / 2,
+        s_minute_inner_radius,
+        s_minute_block_size
+      ));
+      draw_right_min_outer_segment(ctx, 0, 12);
+      break;
+
+    case 9 :
+      draw_right_min_inner_block_from_center(ctx, s_minute_block_size, -s_minute_inner_radius);
+      draw_min_right_inner_block_custom(ctx, GRect(
+        s_center.x,
+        s_center.y - s_minute_block_size / 2,
+        s_minute_inner_radius,
+        s_minute_block_size
+      ));
+      draw_right_min_outer_segment(ctx, 0, 12);
       break;
 
   }
@@ -574,7 +581,7 @@ static void main_window_load(Window *window) {
   s_minute_inner_radius = s_base_radius * INNER_SEGMENT_RATIO / 10000;
   s_minute_inset = s_hour_inner_radius - s_minute_inner_radius;
   s_minute_block_size = s_base_radius * INNER_BLOCK_RATIO / 10000;
-  s_center = GPoint(s_base_radius, s_base_radius);
+  s_center = GPoint(window_bounds.size.w / 2,  window_bounds.size.h / 2);
   s_hour_rect = GRect(window_bounds.size.w / 2 - s_base_radius + 1,
                     window_bounds.size.h / 2 - s_base_radius + 1,
                     s_base_radius * 2,
