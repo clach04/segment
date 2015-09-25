@@ -27,6 +27,7 @@ gulp.task('build', ['clean'], function() {
   };
 
   gulp.src('config/index.html')
+    .pipe(template({versionLabel: require('./appinfo.json').versionLabel}))
     .pipe(inline())
     .pipe(minifyInline({
       js: {},
