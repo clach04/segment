@@ -313,14 +313,6 @@ static void draw_inner(GContext *ctx) {
       break;
   }
 
-  graphics_context_set_fill_color(ctx, s_colors.background);
-  graphics_fill_rect(ctx, GRect(
-    s_center.x,
-    s_center.y - s_hour_inner_radius,
-    1,
-    s_hour_inner_radius * 2
-  ), 0, GCornerNone);
-
   switch (s_time->tm_min % 10) {
     case 0 :
       draw_right_min_inner_block_from_center(ctx, s_minute_block_size, s_minute_inner_radius);
@@ -582,12 +574,12 @@ static void main_window_load(Window *window) {
   s_minute_inset = s_hour_inner_radius - s_minute_inner_radius;
   s_minute_block_size = s_base_radius * INNER_BLOCK_RATIO / 10000;
   s_center = GPoint(window_bounds.size.w / 2,  window_bounds.size.h / 2);
-  s_hour_rect = GRect(window_bounds.size.w / 2 - s_base_radius + 1,
-                    window_bounds.size.h / 2 - s_base_radius + 1,
+  s_hour_rect = GRect(window_bounds.size.w / 2 - s_base_radius,
+                    window_bounds.size.h / 2 - s_base_radius,
                     s_base_radius * 2,
                     s_base_radius * 2);
-  s_minute_rect = GRect(window_bounds.size.w / 2 - s_hour_inner_radius + 1,
-                        window_bounds.size.h / 2 - s_hour_inner_radius + 1,
+  s_minute_rect = GRect(window_bounds.size.w / 2 - s_hour_inner_radius,
+                        window_bounds.size.h / 2 - s_hour_inner_radius,
                         s_hour_inner_radius * 2,
                         s_hour_inner_radius * 2);
   APP_LOG(APP_LOG_LEVEL_INFO, "s_hour_rect: %d", s_hour_rect.size.w);
