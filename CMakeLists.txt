@@ -12,7 +12,7 @@ set(SOURCES
   )
 
 set(INCLUDES
-  ~/pebble-dev/SDK/_current/Pebble/basalt/include
+  ~/Library/Application\ Support/Pebble\ SDK/SDKs/current/sdk-core/pebble/basalt/include
 )
 
 add_definitions(-DPEBBLE)

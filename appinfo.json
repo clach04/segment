@@ -3,9 +3,9 @@
   "shortName": "Segment",
   "longName": "Segment",
   "companyName": "Keegan Lillo",
-  "versionLabel": "1.49",
+  "versionLabel": "1.50",
   "sdkVersion": "3",
-  "targetPlatforms": ["chalk"],
+  "targetPlatforms": ["aplite", "basalt", "chalk"],
   "watchapp": {
     "watchface": true
   },

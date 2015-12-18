@@ -197,6 +197,18 @@ static void draw_left_min_inner_block_custom(GContext *ctx, GRect rect) {
   _draw_min_inner_block(ctx, s_colors.min_left, rect);
 }
 
+static void draw_bw_divider(GContext *ctx) {
+  GRect dividerRect = GRect(
+    s_center.x -1,
+    s_center.y - s_hour_inner_radius,
+    2,
+    s_hour_inner_radius * 2
+  );
+
+  graphics_context_set_fill_color(ctx, s_colors.background);
+  graphics_fill_rect(ctx, dividerRect, 0, GCornerNone);
+}
+
 static void draw_outer(GContext *ctx) {
 
   switch (s_time->tm_hour) {
@@ -398,8 +410,11 @@ static void draw_inner(GContext *ctx) {
       ));
       draw_right_min_outer_segment(ctx, 0, 12);
       break;
-
   }
+
+  #ifdef PBL_BW
+    draw_bw_divider(ctx);
+  #endif
 
   switch (s_time->tm_hour) {
     case 1 :
@@ -651,10 +666,22 @@ static void init() {
 
   // Show the Window on the watch, with animated=true
   window_stack_push(s_window, true);
-  s_colors.background = GColorFromHEX(persist_exists(COLOR_BACKGROUND) ? persist_read_int(COLOR_BACKGROUND) : 0x000055);
-  s_colors.hour = GColorFromHEX(persist_exists(COLOR_HOUR) ? persist_read_int(COLOR_HOUR) : 0x0055ff);
-  s_colors.min_left = GColorFromHEX(persist_exists(COLOR_MIN_LEFT) ? persist_read_int(COLOR_MIN_LEFT) :0x55aaff);
-  s_colors.min_right = GColorFromHEX(persist_exists(COLOR_MIN_RIGHT) ? persist_read_int(COLOR_MIN_RIGHT) : 0xaaffff);
+  s_colors.background = GColorFromHEX(persist_exists(COLOR_BACKGROUND) ?
+    persist_read_int(COLOR_BACKGROUND) :
+    PBL_IF_COLOR_ELSE(0x000055, 0x000000)
+  );
+  s_colors.hour = GColorFromHEX(persist_exists(COLOR_HOUR) ?
+    persist_read_int(COLOR_HOUR) :
+    PBL_IF_COLOR_ELSE(0x0055ff, 0xffffff)
+  );
+  s_colors.min_left = GColorFromHEX(persist_exists(COLOR_MIN_LEFT) ?
+    persist_read_int(COLOR_MIN_LEFT) :
+    PBL_IF_COLOR_ELSE(0x55aaff, 0xaaaaaa)
+  );
+  s_colors.min_right = GColorFromHEX(persist_exists(COLOR_MIN_RIGHT) ?
+    persist_read_int(COLOR_MIN_RIGHT) :
+    PBL_IF_COLOR_ELSE(0xaaffff, 0xaaaaaa)
+  );
 }
 
 static void deinit() {
