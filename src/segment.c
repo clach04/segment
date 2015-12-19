@@ -649,7 +649,7 @@ void in_received_handler(DictionaryIterator *received, void *context) {
 static void init() {
   app_message_register_inbox_dropped(in_dropped_handler);
   app_message_register_inbox_received(in_received_handler);
-  app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
+  app_message_open(128, 128);
 
   // Create main Window element and assign to pointer
   s_window = window_create();

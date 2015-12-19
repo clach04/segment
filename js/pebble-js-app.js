@@ -13,9 +13,11 @@ Pebble.addEventListener('ready', function(e) {
 });
 
 Pebble.addEventListener('showConfiguration', function(e) {
+  var platform = Pebble.getActiveWatchInfo().platform;
   var settings;
   try {
-    settings = JSON.parse(localStorage.getItem('settings')) || {};
+    settings = JSON.parse(localStorage.getItem('settings-' + platform)) || {};
+    settings.platform = platform;
   } catch (e) {
     console.log(e);
     settings = {};
@@ -28,11 +30,14 @@ Pebble.addEventListener('showConfiguration', function(e) {
 });
 
 Pebble.addEventListener('webviewclosed', function(e) {
+  var platform = Pebble.getActiveWatchInfo().platform;
+
   // Decode and parse config data as JSON
   var settings = JSON.parse(decodeURIComponent(e.response));
+  console.log(JSON.stringify(settings));
   if (!settings) return;
 
-  localStorage.setItem('settings', JSON.stringify(settings));
+  localStorage.setItem('settings-' + platform, JSON.stringify(settings));
 
   // Send settings to Pebble watchapp
   Pebble.sendAppMessage({
@@ -40,11 +45,11 @@ Pebble.addEventListener('webviewclosed', function(e) {
     colorHour: parseInt(settings.colorHour, 16),
     colorMinLeft: parseInt(settings.colorMinLeft, 16),
     colorMinRight: parseInt(settings.colorMinRight, 16)
-  }, function(e) {
-    console.log('Sent config data to Pebble');
   }, function() {
+    console.log('Sent config data to Pebble');
+  }, function(err) {
     console.log('Failed to send config data!');
-    console.log(JSON.stringify(e));
+    console.log(JSON.stringify(err));
 
   });
 

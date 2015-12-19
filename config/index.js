@@ -1,21 +1,43 @@
 'use strict';
 
-var settings = {
-  preset: window.hashData.preset || 'preset-0',
-  colorBackground: window.hashData.colorBackground || '0x000055',
-  colorHour: window.hashData.colorHour || '0x0055ff',
-  colorMinLeft: window.hashData.colorMinLeft || '0x55aaff',
-  colorMinRight: window.hashData.colorMinRight || '0xaaffff'
-};
+var settings = {};
+var presets = [];
+var isAplite = window.hashData.platform === 'aplite';
 
-var presets = [
-  {name: 'Blueberry', val: '0x000055,0x0055ff,0x55aaff,0xaaffff'},
-  {name: 'Lost Woods', val: '0xaaffaa,0x005500,0x00aa00,0x00ff00'},
-  {name: 'Old Timey', val: '0xFFFFFF,0x000000,0x555555,0xAAAAAA'},
-  {name: 'Red Tole', val: '0x000000,0xAA0000,0xAAAAAA,0xFFFFFF'},
-  {name: 'Sunburst', val: '0x550000,0xff0000,0xffaa00,0xffff00'},
-  {name: 'Wild Flower', val: '0x000000,0xff0000,0xff5500,0xffaaaa'}
-];
+if (isAplite) {
+  settings = {
+    preset: window.hashData.preset || 'preset-0',
+    colorBackground: window.hashData.colorBackground || '0x000000',
+    colorHour: window.hashData.colorHour || '0xffffff',
+    colorMinLeft: window.hashData.colorMinLeft || '0xaaaaaa',
+    colorMinRight: window.hashData.colorMinRight || '0xaaaaaa'
+  };
+  presets = [
+    {name: 'Black White Grey', val: '0x000000,0xffffff,0xaaaaaa,0xaaaaaa'},
+    {name: 'Black Grey White', val: '0x000000,0xaaaaaa,0xffffff,0xffffff'},
+    {name: 'Grey Black White', val: '0xaaaaaa,0x000000,0xffffff,0xffffff'},
+    {name: 'Grey White Black', val: '0xaaaaaa,0xffffff,0x000000,0x000000'},
+    {name: 'White Black Grey', val: '0xffffff,0x000000,0xaaaaaa,0xaaaaaa'},
+    {name: 'White Grey Black', val: '0xffffff,0xaaaaaa,0x000000,0x000000'}
+
+  ];
+} else {
+  settings = {
+    preset: window.hashData.preset || 'preset-0',
+    colorBackground: window.hashData.colorBackground || '0x000055',
+    colorHour: window.hashData.colorHour || '0x0055ff',
+    colorMinLeft: window.hashData.colorMinLeft || '0x55aaff',
+    colorMinRight: window.hashData.colorMinRight || '0xaaffff'
+  };
+  presets = [
+    {name: 'Blueberry', val: '0x000055,0x0055ff,0x55aaff,0xaaffff'},
+    {name: 'Lost Woods', val: '0xaaffaa,0x005500,0x00aa00,0x00ff00'},
+    {name: 'Old Timey', val: '0xFFFFFF,0x000000,0x555555,0xAAAAAA'},
+    {name: 'Red Tole', val: '0x000000,0xAA0000,0xAAAAAA,0xFFFFFF'},
+    {name: 'Sunburst', val: '0x550000,0xff0000,0xffaa00,0xffff00'},
+    {name: 'Wild Flower', val: '0x000000,0xff0000,0xff5500,0xffaaaa'}
+  ];
+}
 
 function setColors() {
   $('.item-color').each(function() {
@@ -101,4 +123,8 @@ $(function() {
 
   // all complete
   $('.item-container').removeClass('hide');
+
+  if (isAplite) {
+    $('.item-container.hide-aplite').addClass('hide');
+  }
 });
