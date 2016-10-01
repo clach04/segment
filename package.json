@@ -17,7 +17,7 @@
   ],
   "pebble": {
     "displayName": "Segment",
-    "sdkVersion": "4",
+    "sdkVersion": "3",
     "resources": {
       "media": []
     },
