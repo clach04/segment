@@ -13,9 +13,14 @@ set(SOURCES
 
 set(INCLUDES
   ~/Library/Application\ Support/Pebble\ SDK/SDKs/current/sdk-core/pebble/basalt/include
+  ./node_modules/pebble-events/dist/include
+  ./build/include
+  ./build
+  ./include
 )
 
 add_definitions(-DPEBBLE)
+add_definitions(-DPBL_COLOR)
 
 include_directories(${INCLUDES})
 

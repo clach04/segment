@@ -1,0 +1,218 @@
+[
+  {
+    "type": "heading",
+    "defaultValue": "Segment",
+    "size": 1
+  },
+  {
+    "type": "text",
+    "defaultValue": "By Keegan Lillo - <a href=\"http://lillo.me\" target=\"_blank\">Lillo.me"
+  },
+  {
+    "type": "section",
+    "capabilities": ["COLOR"],
+    "items": [
+      {
+        "type": "heading",
+        "defaultValue": "Personalize"
+      },
+      {
+        "type": "select",
+        "label": "Preset",
+        "messageKey": "preset",
+        "defaultValue": "000055,0055ff,55aaff,aaffff",
+        "options": [
+          {
+            "label": "Blueberry (Normal)",
+            "value": "000055,0055ff,55aaff,aaffff"
+          },
+          {
+            "label": "Blueberry (Dark)",
+            "value": "aaffff,000055,0055ff,55aaff"
+          },
+          {
+            "label": "Holidays",
+            "value": "000000,ff0000,00aa00,ffffff"
+          },
+          {
+            "label": "Lost Woods (Normal)",
+            "value": "aaffaa,005500,00aa00,00ff00"
+          },
+          {
+            "label": "Lost Woods (Dark)",
+            "value": "000000,005500,00aa00,55ff55"
+          },
+          {
+            "label": "Old Timey (Normal)",
+            "value": "FFFFFF,000000,555555,AAAAAA"
+          },
+          {
+            "label": "Old Timey (Dark)",
+            "value": "000000,555555,aaaaaa,ffffff"
+          },
+          {
+            "label": "Red Tole",
+            "value": "000000,AA0000,AAAAAA,FFFFFF"
+          },
+          {
+            "label": "Sunburst",
+            "value": "550000,ff0000,ffaa00,ffff00"
+          },
+          {
+            "label": "Wild Flower",
+            "value": "000000,ff0000,ff5500,ffaaaa"
+          },
+          {
+            "label": "--Custom--",
+            "value": ""
+          }
+        ]
+      },
+      {
+        "type": "color",
+        "messageKey": "color_background",
+        "label": "Background",
+        "defaultValue": "000055"
+      },
+      {
+        "type": "color",
+        "messageKey": "color_hour",
+        "label": "Hour",
+        "defaultValue": "0055ff"
+      },
+      {
+        "type": "color",
+        "messageKey": "color_min_left",
+        "label": "Left Minute Digit",
+        "defaultValue": "55aaff"
+      },
+      {
+        "type": "color",
+        "messageKey": "color_min_right",
+        "label": "Right Minute Digit",
+        "defaultValue": "aaffff"
+      }
+    ]
+  },
+  {
+    "type": "section",
+    "capabilities": ["BW"],
+    "items": [
+      {
+        "type": "heading",
+        "defaultValue": "Personalize"
+      },
+      {
+        "type": "select",
+        "label": "Preset",
+        "messageKey": "preset",
+        "defaultValue": "000000,ffffff,aaaaaa,aaaaaa",
+        "options": [
+          {
+            "label": "Black White Grey",
+            "value": "000000,ffffff,aaaaaa,aaaaaa"
+          },
+          {
+            "label": "Black Grey White",
+            "value": "000000,aaaaaa,ffffff,ffffff"
+          },
+          {
+            "label": "Grey Black White",
+            "value": "aaaaaa,000000,ffffff,ffffff"
+          },
+          {
+            "label": "Grey White Black",
+            "value": "aaaaaa,ffffff,000000,000000"
+          },
+          {
+            "label": "White Black Grey",
+            "value": "ffffff,000000,aaaaaa,aaaaaa"
+          },
+          {
+            "label": "White Grey Black",
+            "value": "ffffff,aaaaaa,000000,000000"
+          },
+          {
+            "label": "--Custom--",
+            "value": ""
+          }
+        ]
+      },
+      {
+        "type": "color",
+        "messageKey": "color_background",
+        "label": "Background",
+        "defaultValue": "000000",
+        "layout": "GRAY"
+      },
+      {
+        "type": "color",
+        "messageKey": "color_hour",
+        "label": "Hour",
+        "defaultValue": "ffffff",
+        "layout": "GRAY"
+      },
+      {
+        "type": "color",
+        "messageKey": "color_min_left",
+        "label": "Left Minute Digit",
+        "defaultValue": "aaaaaa",
+        "layout": "GRAY"
+      },
+      {
+        "type": "color",
+        "messageKey": "color_min_right",
+        "label": "Right Minute Digit",
+        "defaultValue": "aaaaaa",
+        "layout": "GRAY"
+      }
+    ]
+  },
+  {
+    "type": "section",
+    "capabilities": ["COLOR"],
+    "items": [
+      {
+        "type": "heading",
+        "defaultValue": "Direct Input"
+      },
+      {
+        "type": "input",
+        "id": "directInput",
+        "defaultValue": "55,55ff,55aaff,aaffff",
+        "label": "Copy the contents of this field to share your color combination with a friend."
+      },
+      {
+        "type": "button",
+        "id": "directInputBtn",
+        "defaultValue": "Load Direct Input"
+      }
+    ]
+  },
+  {
+    "type": "section",
+    "items": [
+      {
+        "type": "heading",
+        "defaultValue": "Other Settings"
+      },
+      {
+        "type": "toggle",
+        "messageKey": "full_size",
+        "defaultValue": false,
+        "label": "Full Size"
+      },
+      {
+        "type": "toggle",
+        "messageKey": "enable_min_animation",
+        "label": "Enable Minute Change Animation",
+        "description" : "Disable this to save battery.",
+        "defaultValue": false
+      }
+    ]
+  },
+  {
+    "type": "submit",
+    "defaultValue": "Save"
+  }
+]

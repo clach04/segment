@@ -6,6 +6,8 @@ module.exports = function(minified) {
 
   function updateDirectInput() {
     var directInputItem = Clay.getItemById('directInput');
+    if (!directInputItem) { return; }
+
     var colors = Clay.getItemsByType('color').map(function(colorItem) {
       return colorItem.get().toString(16);
     });
@@ -30,7 +32,7 @@ module.exports = function(minified) {
   }
 
   function handleColorChange() {
-    var presetItem = Clay.getItemByAppKey('preset');
+    var presetItem = Clay.getItemByMessageKey('preset');
     presetItem.set('');
     updateDirectInput();
   }
@@ -56,19 +58,13 @@ module.exports = function(minified) {
   }
 
   Clay.on(Clay.EVENTS.AFTER_BUILD, function() {
-    var presetItem = Clay.getItemByAppKey('preset');
+    var presetItem = Clay.getItemByMessageKey('preset');
     presetItem.on('change', setColorsFromPreset);
     addColorListeners();
 
     var directInputBtn = Clay.getItemById('directInputBtn');
     if (directInputBtn) {
       directInputBtn.$manipulatorTarget.on('click', loadFromDirectInput);
-    }
-
-    if (Clay.meta.activeWatchInfo.platform === 'aplite') {
-      Clay.getItemsByType('color').forEach(function(colorItem) {
-        colorItem.hide();
-      });
     }
   });
 };

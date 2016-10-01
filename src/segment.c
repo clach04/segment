@@ -1,4 +1,13 @@
 #include <pebble.h>
+#include "enamel.h"
+#include <pebble-events/pebble-events.h>
+
+#define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
+#define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
+
+#define ANIMATION_PHASE_OUTER_EXPAND 0
+#define ANIMATION_PHASE_SHOW_TIME 2
+#define ANIMATION_PHASE_OUTER_REVEAL 1
 
 const int SEGMENT_SIZE = 15;
 const int OUTER_SEGMENT_RATIO = 6890; // divided by 1000 later
@@ -7,20 +16,17 @@ const int INNER_BLOCK_RATIO = 2223;
 
 typedef void (*AnimationAllPhasesCompleteCallback)(void);
 
-struct Colors {
+
+struct Settings {
   GColor background;
   GColor hour;
   GColor min_left;
   GColor min_right;
+  bool full_size;
+  bool enable_min_animation;
 };
 
-enum APP_MESSAGE_KEYS {
-  PRESET,
-  COLOR_BACKGROUND,
-  COLOR_HOUR,
-  COLOR_MIN_LEFT,
-  COLOR_MIN_RIGHT,
-};
+static EventHandle s_window_event_handle;
 
 static Window *s_window;
 static struct tm *s_time;
@@ -63,7 +69,8 @@ static int s_hour_animation_scale[12] = {
   325
 };
 
-static struct Colors s_colors;
+static struct Settings s_settings;
+
 
 // DECLARATIONS
 static void next_animation(bool reverse);
@@ -79,13 +86,36 @@ static int animation_distance(int64_t start, int64_t end) {
     / (ANIMATION_NORMALIZED_MAX - ANIMATION_NORMALIZED_MIN);
 }
 
+static void update_sizes() {
+  Layer *window_layer = window_get_root_layer(s_window);
+  GRect window_bounds = layer_get_unobstructed_bounds(window_layer);
+
+  s_base_radius = (s_settings.full_size ? MAX(window_bounds.size.w, window_bounds.size.h)
+                                        : MIN(window_bounds.size.w, window_bounds.size.h)) / 2;
+
+  s_hour_inner_radius = s_base_radius * OUTER_SEGMENT_RATIO / 10000;
+  s_hour_inset = s_base_radius - s_hour_inner_radius + 1; // add 1 extra pixel to stop weird gaps in antialiasing
+  s_minute_inner_radius = s_base_radius * INNER_SEGMENT_RATIO / 10000;
+  s_minute_inset = s_hour_inner_radius - s_minute_inner_radius;
+  s_minute_block_size = s_base_radius * INNER_BLOCK_RATIO / 10000;
+  s_center = GPoint(window_bounds.size.w / 2,  window_bounds.size.h / 2);
+  s_hour_rect = GRect(window_bounds.size.w / 2 - s_base_radius,
+                      window_bounds.size.h / 2 - s_base_radius,
+                      s_base_radius * 2,
+                      s_base_radius * 2);
+  s_minute_rect = GRect(window_bounds.size.w / 2 - s_hour_inner_radius,
+                        window_bounds.size.h / 2 - s_hour_inner_radius,
+                        s_hour_inner_radius * 2,
+                        s_hour_inner_radius * 2);
+}
+
 static void draw_background(Layer *layer, GContext *ctx) {
-  graphics_context_set_fill_color(ctx, s_colors.background);
+  graphics_context_set_fill_color(ctx, s_settings.background);
   graphics_fill_rect(ctx, layer_get_bounds(layer), 0, GCornerNone);
 }
 
 static void draw_outer_expand(GContext *ctx) {
-  graphics_context_set_fill_color(ctx, s_colors.hour);
+  graphics_context_set_fill_color(ctx, s_settings.hour);
   graphics_fill_radial(
     ctx,
     grect_inset(s_hour_rect, GEdgeInsets(animation_distance(s_base_radius - 7, 0))),
@@ -97,7 +127,7 @@ static void draw_outer_expand(GContext *ctx) {
 }
 
 static void draw_outer_reveal(GContext *ctx) {
-  graphics_context_set_fill_color(ctx, s_colors.hour);
+  graphics_context_set_fill_color(ctx, s_settings.hour);
   graphics_fill_radial(
     ctx,
     s_hour_rect,
@@ -109,7 +139,7 @@ static void draw_outer_reveal(GContext *ctx) {
 }
 
 static void draw_hour_outer_segment(GContext *ctx, int start, int end, int anim_start, bool swap_direction) {
-  graphics_context_set_fill_color(ctx, s_colors.hour);
+  graphics_context_set_fill_color(ctx, s_settings.hour);
 
   if (swap_direction) {
     graphics_fill_radial(
@@ -133,7 +163,7 @@ static void draw_hour_outer_segment(GContext *ctx, int start, int end, int anim_
 }
 
 static void draw_hour_inner_segment(GContext *ctx, int start, int end) {
-  graphics_context_set_fill_color(ctx, s_colors.hour);
+  graphics_context_set_fill_color(ctx, s_settings.hour);
 
   graphics_fill_radial(
     ctx,
@@ -159,11 +189,11 @@ static void _draw_min_outer_segment(GContext *ctx, GColor color, int start, int 
 }
 
 static void draw_right_min_outer_segment(GContext *ctx, int start, int end) {
-  _draw_min_outer_segment(ctx, s_colors.min_right, start, end);
+  _draw_min_outer_segment(ctx, s_settings.min_right, start, end);
 }
 
 static void draw_left_min_outer_segment(GContext *ctx, int start, int end) {
-  _draw_min_outer_segment(ctx, s_colors.min_left, start, end);
+  _draw_min_outer_segment(ctx, s_settings.min_left, start, end);
 }
 
 static void _draw_min_inner_block(GContext *ctx, GColor color, GRect rect) {
@@ -182,19 +212,19 @@ static void _draw_min_inner_block(GContext *ctx, GColor color, GRect rect) {
 }
 
 static void draw_right_min_inner_block_from_center(GContext *ctx, int width, int height) {
-  _draw_min_inner_block(ctx, s_colors.min_right, GRect(s_center.x, s_center.y, width, height));
+  _draw_min_inner_block(ctx, s_settings.min_right, GRect(s_center.x, s_center.y, width, height));
 }
 
 static void draw_left_min_inner_block_from_center(GContext *ctx, int width, int height) {
-  _draw_min_inner_block(ctx, s_colors.min_left, GRect(s_center.x, s_center.y, width, height));
+  _draw_min_inner_block(ctx, s_settings.min_left, GRect(s_center.x, s_center.y, width, height));
 }
 
 static void draw_min_right_inner_block_custom(GContext *ctx, GRect rect) {
-  _draw_min_inner_block(ctx, s_colors.min_right, rect);
+  _draw_min_inner_block(ctx, s_settings.min_right, rect);
 }
 
 static void draw_left_min_inner_block_custom(GContext *ctx, GRect rect) {
-  _draw_min_inner_block(ctx, s_colors.min_left, rect);
+  _draw_min_inner_block(ctx, s_settings.min_left, rect);
 }
 
 static void draw_bw_divider(GContext *ctx) {
@@ -205,7 +235,7 @@ static void draw_bw_divider(GContext *ctx) {
     s_hour_inner_radius * 2
   );
 
-  graphics_context_set_fill_color(ctx, s_colors.background);
+  graphics_context_set_fill_color(ctx, s_settings.background);
   graphics_fill_rect(ctx, dividerRect, 0, GCornerNone);
 }
 
@@ -477,19 +507,20 @@ static void draw_inner(GContext *ctx) {
 
 
 static void update_layer(Layer *layer, GContext *ctx) {
+  update_sizes();
   draw_background(layer, ctx);
 
   switch (s_animation_phase) {
-    case 0 :
+    case ANIMATION_PHASE_OUTER_EXPAND :
       draw_outer_expand(ctx);
       break;
 
-    case 1 :
+    case ANIMATION_PHASE_OUTER_REVEAL :
       draw_inner(ctx);
       draw_outer_reveal(ctx);
       break;
 
-    case 2 :
+    case ANIMATION_PHASE_SHOW_TIME :
       draw_inner(ctx);
       draw_outer(ctx);
       break;
@@ -519,7 +550,7 @@ static void on_animation_stopped(Animation *animation, bool stopped, void *ctx) 
 }
 
 static int get_animation_timing() {
-  if(s_animation_phase == 2) {
+  if(s_animation_phase == ANIMATION_PHASE_SHOW_TIME) {
     return s_hour_animation_scale[s_time->tm_hour];
   } else {
     return s_animation_phase_timing[s_animation_phase];
@@ -561,11 +592,20 @@ static void set_time(void) {
   s_time->tm_hour = s_time->tm_hour % 12;
 //  s_time->tm_hour = 1;
 //  s_time->tm_min = 8;
-  animate_to_phase(2, NULL);
+  if (s_settings.enable_min_animation || s_animation_phase != ANIMATION_PHASE_SHOW_TIME) {
+    animate_to_phase(2, NULL);
+  } else {
+    layer_mark_dirty(window_get_root_layer(s_window));
+  }
 }
 
 static void update_time() {
-  if(s_animation_phase == 2) {
+  if(!s_settings.enable_min_animation) {
+    set_time();
+    return;
+  }
+
+  if(s_animation_phase == ANIMATION_PHASE_SHOW_TIME) {
     animate_to_phase(1, set_time);
   } else {
     set_time();
@@ -579,29 +619,8 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
 }
 
 static void main_window_load(Window *window) {
-  Layer *window_layer = window_get_root_layer(window);
-  GRect window_bounds = layer_get_bounds(window_layer);
-
-  s_base_radius = (window_bounds.size.w < window_bounds.size.h ? window_bounds.size.w : window_bounds.size.h) / 2;
-  s_hour_inner_radius = s_base_radius * OUTER_SEGMENT_RATIO / 10000;
-  s_hour_inset = s_base_radius - s_hour_inner_radius + 1; // add 1 extra pixel to stop weird gaps in antialiasing
-  s_minute_inner_radius = s_base_radius * INNER_SEGMENT_RATIO / 10000;
-  s_minute_inset = s_hour_inner_radius - s_minute_inner_radius;
-  s_minute_block_size = s_base_radius * INNER_BLOCK_RATIO / 10000;
-  s_center = GPoint(window_bounds.size.w / 2,  window_bounds.size.h / 2);
-  s_hour_rect = GRect(window_bounds.size.w / 2 - s_base_radius,
-                    window_bounds.size.h / 2 - s_base_radius,
-                    s_base_radius * 2,
-                    s_base_radius * 2);
-  s_minute_rect = GRect(window_bounds.size.w / 2 - s_hour_inner_radius,
-                        window_bounds.size.h / 2 - s_hour_inner_radius,
-                        s_hour_inner_radius * 2,
-                        s_hour_inner_radius * 2);
-  APP_LOG(APP_LOG_LEVEL_INFO, "s_hour_rect: %d", s_hour_rect.size.w);
-  APP_LOG(APP_LOG_LEVEL_INFO, "s_minute_inner_radius: %d", s_minute_inner_radius);
-  APP_LOG(APP_LOG_LEVEL_INFO, "s_minute_inset: %d", s_minute_inset);
-  layer_set_update_proc(window_get_root_layer(window), update_layer);
-
+  update_sizes();
+  layer_set_update_proc(window_get_root_layer(s_window), update_layer);
 }
 
 static void did_focus(bool in_focus) {
@@ -614,45 +633,32 @@ static void did_focus(bool in_focus) {
   update_time();
 }
 
-void in_dropped_handler(AppMessageResult reason, void *context) {
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Incoming message dropped: %d", reason);
+static void update_settings() {
+  s_settings.background = enamel_get_color_background();
+  s_settings.hour = enamel_get_color_hour();
+  s_settings.min_left = enamel_get_color_min_left();
+  s_settings.min_right = enamel_get_color_min_right();
+  s_settings.full_size = enamel_get_full_size();
+  s_settings.enable_min_animation = enamel_get_enable_min_animation();
+  layer_mark_dirty(window_get_root_layer(s_window));
 }
 
-void in_received_handler(DictionaryIterator *received, void *context) {
-  Tuple *tuple;
-
-  tuple = dict_find(received, COLOR_BACKGROUND);
-  if(tuple) {
-    s_colors.background = GColorFromHEX(tuple->value->int32);
-    persist_write_int(COLOR_BACKGROUND, tuple->value->int32);
-  }
-  tuple = dict_find(received, COLOR_HOUR);
-  if(tuple) {
-    s_colors.hour = GColorFromHEX(tuple->value->int32);
-    persist_write_int(COLOR_HOUR, tuple->value->int32);
-  }
-  tuple = dict_find(received, COLOR_MIN_LEFT);
-  if(tuple) {
-    s_colors.min_left = GColorFromHEX(tuple->value->int32);
-    persist_write_int(COLOR_MIN_LEFT, tuple->value->int32);
-  }
-  tuple = dict_find(received, COLOR_MIN_RIGHT);
-  if(tuple) {
-    s_colors.min_right = GColorFromHEX(tuple->value->int32);
-    persist_write_int(COLOR_MIN_RIGHT, tuple->value->int32);
-  }
-
-  layer_mark_dirty(window_get_root_layer(s_window));
-
+static void enamel_settings_received_window_handler(void *context){
+  update_settings();
 }
 
 static void init() {
-  app_message_register_inbox_dropped(in_dropped_handler);
-  app_message_register_inbox_received(in_received_handler);
-  app_message_open(128, 128);
-
   // Create main Window element and assign to pointer
   s_window = window_create();
+
+  // Initialize Enamel to register App Message handlers and restores settings
+  enamel_init();
+
+  // Register our callback
+  enamel_settings_received_subscribe(enamel_settings_received_window_handler, s_window);
+
+  // call pebble-events app_message_open function
+  events_app_message_open();
 
   // Set handlers to manage the elements inside the Window
   window_set_window_handlers(s_window, (WindowHandlers) {
@@ -666,33 +672,21 @@ static void init() {
 
   // Show the Window on the watch, with animated=true
   window_stack_push(s_window, true);
-  s_colors.background = GColorFromHEX(persist_exists(COLOR_BACKGROUND) ?
-    persist_read_int(COLOR_BACKGROUND) :
-    PBL_IF_COLOR_ELSE(0x000055, 0x000000)
-  );
-  s_colors.hour = GColorFromHEX(persist_exists(COLOR_HOUR) ?
-    persist_read_int(COLOR_HOUR) :
-    PBL_IF_COLOR_ELSE(0x0055ff, 0xffffff)
-  );
-  s_colors.min_left = GColorFromHEX(persist_exists(COLOR_MIN_LEFT) ?
-    persist_read_int(COLOR_MIN_LEFT) :
-    PBL_IF_COLOR_ELSE(0x55aaff, 0xaaaaaa)
-  );
-  s_colors.min_right = GColorFromHEX(persist_exists(COLOR_MIN_RIGHT) ?
-    persist_read_int(COLOR_MIN_RIGHT) :
-    PBL_IF_COLOR_ELSE(0xaaffff, 0xaaaaaa)
-  );
+  update_settings();
 }
 
 static void deinit() {
   // Destroy Window
-  APP_LOG(APP_LOG_LEVEL_INFO, "DESTROY deinit %d", (int)s_animation);
   if(s_animation) {
     animation_destroy(s_animation);
     s_animation = NULL;
   }
 
   window_destroy(s_window);
+
+  // Unsubscribe from Enamel events
+  enamel_settings_received_unsubscribe(s_window_event_handle);
+  enamel_deinit();
 }
 
 int main(void) {
