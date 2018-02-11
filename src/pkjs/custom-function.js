@@ -40,8 +40,7 @@ module.exports = function(minified) {
   function loadFromDirectInput() {
     var colorItems = Clay.getItemsByType('color');
     Clay.getItemById('directInput').get().split(',').forEach(function(color, index) {
-      console.log('color', color);
-      colorItems[index].set(color);
+      colorItems[index].set(parseInt(color, 16));
     });
   }
 
@@ -60,6 +59,7 @@ module.exports = function(minified) {
   Clay.on(Clay.EVENTS.AFTER_BUILD, function() {
     var presetItem = Clay.getItemByMessageKey('preset');
     presetItem.on('change', setColorsFromPreset);
+    updateDirectInput();
     addColorListeners();
 
     var directInputBtn = Clay.getItemById('directInputBtn');

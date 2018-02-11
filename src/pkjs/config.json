@@ -199,8 +199,9 @@
       {
         "type": "toggle",
         "messageKey": "full_size",
-        "defaultValue": false,
-        "label": "Full Size"
+        "label": "Full Size",
+        "description" : "Controls how the watchface is cropped for rectangular displays.",
+        "defaultValue": false
       },
       {
         "type": "toggle",
